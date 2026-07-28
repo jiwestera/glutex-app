@@ -1,0 +1,249 @@
+@import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
+
+/* ==========================================================================
+   PREMIUM WELLNESS / EDITORIAL THEME
+   ----------------------------------------------------------------------
+   Palette:
+     Ivory/cream base   #faf7f2  (page)  /  #fffdf8 (cards)
+     Charcoal ink        #2b2825 (text, solid "ink" pills/buttons)
+     Accent: Dusty rose  #a66b5e (primary brand accent + destructive tone)
+     Secondary: Sage     #77935c (success / positive states)
+     Highlight: Bronze   #b98a3c (PRs, active-session, premium highlights)
+   Dark mode = a dim, warm charcoal "room", not a stark tech black.
+   ========================================================================== */
+
+@theme {
+  /* Typography */
+  --font-sans: 'Karla', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+
+  /* Soft, barely-there editorial shadows (replace Tailwind's default heavy scale) */
+  --shadow-2xs: 0 1px 2px 0 rgba(43, 40, 37, 0.03);
+  --shadow-xs: 0 1px 3px 0 rgba(43, 40, 37, 0.05);
+  --shadow-sm: 0 2px 6px -1px rgba(43, 40, 37, 0.06);
+  --shadow-md: 0 4px 12px -2px rgba(43, 40, 37, 0.07);
+  --shadow-lg: 0 10px 24px -6px rgba(43, 40, 37, 0.08);
+  --shadow-xl: 0 16px 34px -8px rgba(43, 40, 37, 0.09);
+  --shadow-2xl: 0 24px 48px -10px rgba(43, 40, 37, 0.11);
+  --shadow-inner: inset 0 2px 4px 0 rgba(43, 40, 37, 0.05);
+
+  /* Neutral scale -> warm ivory / charcoal ink (monotonic light -> dark) */
+  --color-stone-50: #fdfbf7;
+  --color-stone-100: #f5efe4;
+  --color-stone-200: #ece2d0;
+  --color-stone-300: #ddd0b8;
+  --color-stone-400: #b7a690;
+  --color-stone-500: #9c8b75;
+  --color-stone-600: #7d6e5c;
+  --color-stone-700: #5f5548;
+  --color-stone-800: #453e35;
+  --color-stone-900: #2b2825;
+  --color-stone-950: #1c1a17;
+  --color-white: #fffdf8;
+
+  /* Accent scale -> dusty rose (rose-*) */
+  --color-rose-50: #f8efec;
+  --color-rose-100: #f0ddd7;
+  --color-rose-200: #e0bdb2;
+  --color-rose-300: #cc9c8c;
+  --color-rose-400: #b98474;
+  --color-rose-500: #a66b5e;
+  --color-rose-600: #8f5648;
+  --color-rose-700: #76453a;
+  --color-rose-800: #5e372e;
+  --color-rose-900: #4a2c25;
+  --color-rose-950: #2e1a15;
+
+  /* Secondary scale -> muted sage (emerald-*, success/positive) */
+  --color-emerald-50: #f1f4ea;
+  --color-emerald-100: #e0e8d3;
+  --color-emerald-200: #c5d3ac;
+  --color-emerald-300: #a8bd88;
+  --color-emerald-400: #8ea873;
+  --color-emerald-500: #77935c;
+  --color-emerald-600: #61794a;
+  --color-emerald-700: #4f6339;
+  --color-emerald-800: #3d4d2c;
+  --color-emerald-900: #2f3c22;
+  --color-emerald-950: #1c2515;
+
+  /* Highlight scale -> muted gold / bronze (amber-*, PRs, premium) */
+  --color-amber-50: #faf3e3;
+  --color-amber-100: #f3e4bf;
+  --color-amber-200: #e8cf94;
+  --color-amber-300: #dbb96c;
+  --color-amber-400: #cc9f4a;
+  --color-amber-500: #b98a3c;
+  --color-amber-600: #a37530;
+  --color-amber-700: #85601f;
+  --color-amber-800: #664a1c;
+  --color-amber-900: #4d3714;
+  --color-amber-950: #34240d;
+
+  /* Rare accent (dark-mode "Auto" icon etc) -> muted heather plum, kept quiet */
+  --color-indigo-100: #e8e1e8;
+  --color-indigo-200: #d2c4d8;
+  --color-indigo-300: #b8a2bf;
+  --color-indigo-400: #9c85a6;
+  --color-indigo-700: #5c4763;
+  --color-indigo-900: #362a3d;
+}
+
+@layer base {
+  body {
+    background-color: #faf7f2; /* warm ivory page background */
+    color: #2b2825;
+    transition: background-color 0.25s ease, color 0.25s ease;
+    font-feature-settings: 'ss01' 1;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Editorial serif for all headline-level type & the app wordmark */
+  h1, h2, h3, h4 {
+    font-family: var(--font-serif);
+    letter-spacing: -0.01em;
+  }
+
+  .font-serif {
+    font-family: var(--font-serif);
+  }
+
+  ::selection {
+    background-color: #a66b5e;
+    color: #fffdf8;
+  }
+}
+
+/* Dark dumbbell logo mark override (gold badge in dim mode) */
+.dark .logo-dumbbell-circle {
+  background-color: #cba86c !important;
+}
+
+.dark .logo-dumbbell-icon {
+  color: #221d19 !important;
+}
+
+/* --------------------------------------------------------------------
+   Light-mode surface refinements (kept for elements that intentionally
+   render as "always-cream" surfaces via plain, un-prefixed utilities)
+   -------------------------------------------------------------------- */
+body:not(.dark) header {
+  background-color: rgba(255, 253, 248, 0.92) !important;
+  border-color: #ece2d0 !important;
+}
+
+/* --------------------------------------------------------------------
+   Dark Mode — dim, warm charcoal "room" (not a stark black tech UI)
+   -------------------------------------------------------------------- */
+html.dark,
+body.dark,
+.dark {
+  color-scheme: dark;
+}
+
+body.dark,
+.dark {
+  background-color: #211d19 !important;
+  color: #ece3d3 !important;
+}
+
+.dark header {
+  background-color: rgba(26, 22, 19, 0.92) !important;
+  border-color: #3a332c !important;
+}
+
+.dark footer {
+  background-color: #1a1613 !important;
+  border-color: #3a332c !important;
+}
+
+.dark .bg-white,
+.dark .bg-white\/80,
+.dark .bg-white\/90,
+.dark .bg-white\/95 {
+  background-color: #2a251f !important;
+  color: #ece3d3;
+}
+
+.dark .bg-stone-50,
+.dark .bg-stone-50\/80,
+.dark .bg-stone-50\/60,
+.dark .bg-stone-50\/50 {
+  background-color: #251f1a !important;
+  color: #ece3d3;
+}
+
+.dark .bg-stone-100,
+.dark .bg-stone-100\/80,
+.dark .bg-stone-100\/70,
+.dark .bg-stone-100\/50 {
+  background-color: #322b23 !important;
+  color: #ece3d3;
+}
+
+.dark .bg-stone-200,
+.dark .bg-stone-200\/80,
+.dark .bg-stone-200\/70,
+.dark .bg-stone-200\/60 {
+  background-color: #3c332a !important;
+}
+
+.dark .border-stone-100,
+.dark .border-stone-200,
+.dark .border-stone-200\/60,
+.dark .border-stone-200\/80,
+.dark .border-stone-300,
+.dark .border-stone-300\/50,
+.dark .border-stone-300\/60 {
+  border-color: #3a332c !important;
+}
+
+.dark .text-stone-900,
+.dark .text-stone-950,
+.dark .text-stone-800 {
+  color: #f1e9db;
+}
+
+.dark .text-stone-700,
+.dark .text-stone-600 {
+  color: #cbbfa9;
+}
+
+.dark .text-stone-500,
+.dark .text-stone-400 {
+  color: #9c8f7a;
+}
+
+.dark .text-stone-300 {
+  color: #766a5a;
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #251f1a !important;
+  color: #ece3d3 !important;
+  border-color: #3a332c !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #766a5a !important;
+}
+
+/* Custom scrollbar for sleek minimal look */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #ddd0b8;
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #3a332c;
+}

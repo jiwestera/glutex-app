@@ -1,0 +1,352 @@
+@import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
+
+/* ==========================================================================
+   MIAMI VICE THEME — synthwave / 1980s Miami neon nightlife
+   ==========================================================================
+   Approach: this file globally remaps the app's existing Tailwind utility
+   classes (bg-white, bg-stone-*, text-stone-*, border-stone-*, bg-rose-*,
+   bg-emerald-*, bg-amber-*, etc.) to a neon-on-midnight palette, the same
+   technique the original peach/stone theme used. Both the "light" and
+   "dark" toggle states lean into the neon-dark aesthetic (recommended by
+   design brief) — "light" becomes a dusk/twilight variant (slightly
+   lighter, warmer/pinker) rather than a plain white theme, "dark" is full
+   deep midnight. Neither ever reverts to a white background.
+   ========================================================================== */
+
+:root {
+  --mv-pink: #ff2e93;
+  --mv-pink-light: #ff6ec7;
+  --mv-cyan: #01fff4;
+  --mv-cyan-light: #6df3ff;
+  --mv-purple: #7b2ff7;
+  --mv-gold: #ffd23f;
+  --mv-midnight: #0d0221;
+  --mv-navy: #170a30;
+  --mv-navy-surface: #1e0f3d;
+  --mv-navy-surface-2: #2a1550;
+  --mv-navy-surface-3: #35195f;
+  --mv-dusk: #26103f;
+  --mv-dusk-surface: #33165a;
+  --mv-dusk-surface-2: #421d70;
+  --mv-dusk-surface-3: #522785;
+  --mv-text: #f6f0ff;
+  --mv-text-dim: #c4aee8;
+  --mv-text-dimmer: #9a80c4;
+  --mv-border: rgba(255, 110, 199, 0.35);
+  --mv-border-cyan: rgba(1, 255, 244, 0.35);
+}
+
+@layer base {
+  body {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--mv-text);
+    transition: background-color 0.25s ease, color 0.25s ease;
+    background-color: var(--mv-dusk);
+    background-image:
+      radial-gradient(ellipse 90% 60% at 15% -10%, rgba(255, 46, 147, 0.28), transparent 60%),
+      radial-gradient(ellipse 80% 55% at 100% 0%, rgba(1, 255, 244, 0.18), transparent 55%),
+      radial-gradient(ellipse 70% 50% at 50% 110%, rgba(123, 47, 247, 0.30), transparent 60%),
+      repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0px, rgba(255, 255, 255, 0.025) 1px, transparent 1px, transparent 3px),
+      linear-gradient(180deg, var(--mv-dusk) 0%, #1c0a38 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  body.dark {
+    background-color: var(--mv-midnight);
+    background-image:
+      radial-gradient(ellipse 90% 60% at 15% -10%, rgba(255, 46, 147, 0.22), transparent 60%),
+      radial-gradient(ellipse 80% 55% at 100% 0%, rgba(1, 255, 244, 0.16), transparent 55%),
+      radial-gradient(ellipse 70% 50% at 50% 110%, rgba(123, 47, 247, 0.22), transparent 60%),
+      repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 1px, transparent 1px, transparent 3px),
+      linear-gradient(180deg, var(--mv-midnight) 0%, #06010f 100%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: 'Audiowide', 'Outfit', sans-serif;
+    letter-spacing: 0.01em;
+  }
+
+  .font-serif {
+    font-family: 'Audiowide', 'Outfit', sans-serif;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Neon gradient text + glow utilities (used directly in component edits).
+   Defined with @utility (Tailwind v4 CSS-first custom utilities) so they
+   can be composed with variants like hover: / focus: / dark: in JSX.
+   -------------------------------------------------------------------------- */
+@utility mv-gradient-text {
+  background-image: linear-gradient(90deg, var(--mv-pink) 0%, var(--mv-purple) 50%, var(--mv-cyan) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@utility mv-gradient-text-gold {
+  background-image: linear-gradient(90deg, var(--mv-gold) 0%, var(--mv-pink-light) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@utility mv-glow-pink {
+  box-shadow: 0 0 16px rgba(255, 46, 147, 0.55), 0 0 2px rgba(255, 46, 147, 0.9);
+}
+@utility mv-glow-cyan {
+  box-shadow: 0 0 16px rgba(1, 255, 244, 0.5), 0 0 2px rgba(1, 255, 244, 0.85);
+}
+@utility mv-glow-gold {
+  box-shadow: 0 0 16px rgba(255, 210, 63, 0.55), 0 0 2px rgba(255, 210, 63, 0.9);
+}
+
+/* ==========================================================================
+   GLOBAL UTILITY-CLASS RETHEME
+   Both "light" (body:not(.dark)) and "dark" states map to the same neon
+   surface language; only the ambient page background differs (dusk vs
+   midnight) — see body / body.dark above.
+   ========================================================================== */
+
+/* ---- Card / panel surfaces (formerly white / peach) ---- */
+.bg-white,
+.bg-white\/95,
+.bg-white\/90,
+.bg-white\/80,
+.dark .bg-white,
+.dark .bg-white\/95,
+.dark .bg-white\/90,
+.dark .bg-white\/80 {
+  background-color: rgba(30, 15, 61, 0.92) !important;
+  color: var(--mv-text);
+}
+.dark .bg-white,
+.dark .bg-white\/95,
+.dark .bg-white\/90,
+.dark .bg-white\/80 {
+  background-color: rgba(13, 2, 33, 0.92) !important;
+}
+
+.bg-stone-50,
+.bg-stone-50\/80,
+.bg-stone-50\/70,
+.bg-stone-50\/60,
+.bg-stone-50\/50,
+.bg-\[\#faf8f5\] {
+  background-color: var(--mv-dusk-surface) !important;
+}
+.dark .bg-stone-50,
+.dark .bg-stone-50\/80,
+.dark .bg-stone-50\/70,
+.dark .bg-stone-50\/60,
+.dark .bg-stone-50\/50 {
+  background-color: var(--mv-navy) !important;
+}
+
+.bg-stone-100,
+.bg-stone-100\/80,
+.bg-stone-100\/70,
+.bg-stone-100\/50 {
+  background-color: var(--mv-dusk-surface-2) !important;
+}
+.dark .bg-stone-100,
+.dark .bg-stone-100\/80,
+.dark .bg-stone-100\/70,
+.dark .bg-stone-100\/50 {
+  background-color: var(--mv-navy-surface) !important;
+}
+
+.bg-stone-200,
+.bg-stone-200\/80,
+.bg-stone-200\/70,
+.bg-stone-200\/60 {
+  background-color: var(--mv-dusk-surface-3) !important;
+}
+.dark .bg-stone-200,
+.dark .bg-stone-200\/80,
+.dark .bg-stone-200\/70,
+.dark .bg-stone-200\/60 {
+  background-color: var(--mv-navy-surface-2) !important;
+}
+.bg-stone-300 { background-color: var(--mv-dusk-surface-3) !important; }
+
+/* ---- "Primary/emphasis" surfaces (stone-700/800/900/950) become the
+   hero neon gradient — this is what turns every primary button, active
+   tab, and selected pill in the app into a hot-pink → violet CTA. ---- */
+.bg-stone-900,
+.bg-stone-950,
+.bg-stone-800,
+.bg-stone-700,
+.dark .bg-stone-900,
+.dark .bg-stone-950,
+.dark .bg-stone-800,
+.dark .bg-stone-700,
+.bg-stone-900\/95,
+.bg-stone-900\/90,
+.bg-stone-900\/60,
+.bg-stone-950\/60,
+.bg-stone-950\/70,
+.bg-stone-950\/80,
+.bg-stone-950\/85,
+.bg-stone-950\/90,
+.bg-stone-800\/80,
+.bg-stone-800\/60 {
+  background-image: linear-gradient(135deg, var(--mv-pink) 0%, #b8339e 45%, var(--mv-purple) 100%) !important;
+  background-color: var(--mv-pink) !important;
+  color: #fff9fd !important;
+  box-shadow: 0 0 14px rgba(255, 46, 147, 0.45);
+}
+/* modal scrims should stay a plain dark overlay, not a hot-pink block */
+.bg-stone-950\/60.backdrop-blur-xs,
+.fixed.inset-0.bg-stone-950\/60 {
+  background-image: none !important;
+  background-color: rgba(6, 1, 16, 0.78) !important;
+  box-shadow: none;
+}
+
+/* ---- Borders ---- */
+.border-stone-200,
+.border-stone-200\/80,
+.border-stone-200\/60,
+.border-stone-100,
+.border-stone-300,
+.border-stone-300\/50,
+.border-stone-300\/60,
+.border-stone-400,
+.border-stone-500,
+.border-stone-700,
+.border-stone-700\/60,
+.border-stone-800 {
+  border-color: var(--mv-border) !important;
+}
+.dark .border-stone-200,
+.dark .border-stone-200\/80,
+.dark .border-stone-200\/60,
+.dark .border-stone-100,
+.dark .border-stone-300,
+.dark .border-stone-300\/50,
+.dark .border-stone-300\/60,
+.dark .border-stone-700,
+.dark .border-stone-700\/60,
+.dark .border-stone-800 {
+  border-color: rgba(1, 255, 244, 0.22) !important;
+}
+.border-stone-900,
+.dark .border-stone-900,
+.dark .border-stone-100 {
+  border-color: var(--mv-cyan) !important;
+}
+.ring-stone-900 { --tw-ring-color: var(--mv-cyan) !important; }
+
+/* ---- Text colors ---- */
+.text-stone-900, .text-stone-950, .text-stone-800,
+.dark .text-stone-900, .dark .text-stone-950, .dark .text-stone-800 {
+  color: var(--mv-text) !important;
+}
+.text-stone-700, .text-stone-600,
+.dark .text-stone-700, .dark .text-stone-600 {
+  color: #e3d6ff !important;
+}
+.text-stone-500, .text-stone-400,
+.dark .text-stone-500, .dark .text-stone-400 {
+  color: var(--mv-text-dim) !important;
+}
+.text-stone-300, .text-stone-200, .text-stone-100,
+.dark .text-stone-300, .dark .text-stone-200, .dark .text-stone-100 {
+  color: var(--mv-text-dimmer) !important;
+}
+/* text that sits directly on a gradient CTA (was text-stone-300 on a
+   bg-stone-900 button) needs to stay bright, not dimmed */
+.bg-stone-900 .text-stone-300,
+.bg-stone-950 .text-stone-300 { color: rgba(255,255,255,0.85) !important; }
+
+/* ---- Rose accent -> hot pink neon (semantic match: warnings / streak / delete) ---- */
+.bg-rose-50, .bg-rose-50\/70, .bg-rose-50\/30, .bg-rose-50\/20 { background-color: rgba(255, 46, 147, 0.12) !important; }
+.bg-rose-100, .bg-rose-200 { background-color: rgba(255, 46, 147, 0.22) !important; }
+.bg-rose-600, .bg-rose-700 {
+  background-image: linear-gradient(135deg, var(--mv-pink) 0%, #d81b6e 100%) !important;
+  background-color: var(--mv-pink) !important;
+  box-shadow: 0 0 14px rgba(255, 46, 147, 0.5);
+}
+.border-rose-200, .border-rose-300, .border-rose-400 { border-color: rgba(255, 46, 147, 0.45) !important; }
+.text-rose-300 { color: var(--mv-pink-light) !important; }
+.text-rose-500, .text-rose-600, .text-rose-700, .text-rose-800, .text-rose-950 { color: var(--mv-pink-light) !important; }
+
+/* ---- Emerald accent -> electric cyan (semantic match: success / active) ---- */
+.bg-emerald-50 { background-color: rgba(1, 255, 244, 0.12) !important; }
+.bg-emerald-500\/10 { background-color: rgba(1, 255, 244, 0.14) !important; }
+.border-emerald-200, .border-emerald-300, .border-emerald-500\/30 { border-color: rgba(1, 255, 244, 0.5) !important; }
+.text-emerald-400, .text-emerald-600, .text-emerald-700, .text-emerald-800, .text-emerald-950 { color: var(--mv-cyan) !important; }
+
+/* ---- Amber accent -> gold (semantic match: PRs / highlights) ---- */
+.bg-amber-100 { background-color: rgba(255, 210, 63, 0.18) !important; }
+.border-amber-200\/80, .border-amber-300, .border-amber-300\/80, .border-amber-500\/30, .border-amber-800 { border-color: rgba(255, 210, 63, 0.5) !important; }
+.text-amber-200, .text-amber-300, .text-amber-400, .text-amber-400\/90, .text-amber-500, .text-amber-700, .text-amber-900, .text-amber-950 { color: var(--mv-gold) !important; }
+
+/* ---- Stray one-offs ---- */
+.text-indigo-300, .bg-indigo-100 { color: var(--mv-cyan-light) !important; }
+.dark .text-indigo-400 { color: var(--mv-cyan-light) !important; }
+.bg-indigo-100 { background-color: rgba(1, 255, 244, 0.16) !important; }
+.text-indigo-700, .text-indigo-900 { color: var(--mv-navy) !important; }
+.border-indigo-200 { border-color: rgba(1, 255, 244, 0.4) !important; }
+
+/* Header / footer chrome */
+header {
+  background-color: rgba(13, 2, 33, 0.85) !important;
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(255, 110, 199, 0.3) !important;
+  box-shadow: 0 1px 24px rgba(255, 46, 147, 0.15);
+}
+footer {
+  background-color: rgba(13, 2, 33, 0.6) !important;
+  border-color: rgba(1, 255, 244, 0.2) !important;
+}
+
+/* Dumbbell logo mark keeps a crisp neon-gradient chip in both modes */
+.logo-dumbbell-circle {
+  background-image: linear-gradient(135deg, var(--mv-pink), var(--mv-cyan)) !important;
+  box-shadow: 0 0 18px rgba(255, 46, 147, 0.6);
+}
+.logo-dumbbell-icon {
+  color: #0d0221 !important;
+}
+.dark .logo-dumbbell-circle {
+  background-image: linear-gradient(135deg, var(--mv-pink), var(--mv-cyan)) !important;
+  background-color: transparent !important;
+}
+.dark .logo-dumbbell-icon {
+  color: #0d0221 !important;
+}
+
+/* Inputs / selects / textareas */
+input, select, textarea {
+  background-color: rgba(13, 2, 33, 0.55) !important;
+  color: var(--mv-text) !important;
+  border-color: var(--mv-border) !important;
+}
+input::placeholder, textarea::placeholder { color: var(--mv-text-dimmer) !important; }
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--mv-cyan) !important;
+  box-shadow: 0 0 0 3px rgba(1, 255, 244, 0.25);
+}
+
+/* Selection color */
+::selection { background-color: var(--mv-pink); color: #fff; }
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(var(--mv-pink), var(--mv-cyan));
+  border-radius: 9999px;
+}
+
+/* Subtle animated glow pulse for "live" / active elements */
+@keyframes mv-pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(1, 255, 244, 0.4); }
+  50% { box-shadow: 0 0 22px rgba(1, 255, 244, 0.8); }
+}
+.animate-pulse {
+  animation: mv-pulse-glow 1.8s ease-in-out infinite;
+}

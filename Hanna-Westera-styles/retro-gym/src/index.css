@@ -1,0 +1,452 @@
+@import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
+
+/* =========================================================================
+   GLUTEX — "RETRO GYM / 90s VINTAGE" THEME
+   A VHS-aerobics-tape, Jazzercise-poster reskin.
+   Approach: the original app uses Tailwind utility classes (stone / rose /
+   amber / emerald / indigo palettes). Rather than rewrite every className in
+   every component, this stylesheet intercepts those utility classes and
+   remaps them to a warm mustard / burnt-orange / teal / cream palette, then
+   layers on chunky borders, hard "sticker" shadows, dotted halftone texture
+   and playful rounded display type. See bottom of file for a written
+   summary of the design decisions.
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   1. TOKENS
+   ------------------------------------------------------------------------- */
+:root {
+  /* Light mode — warm sun-faded 90s poster palette */
+  --gx-bg: #f5ead9;            /* page background — cream */
+  --gx-card: #fffaf0;          /* raised surfaces (bg-white) */
+  --gx-card-soft: #fbeed9;     /* bg-stone-50 */
+  --gx-tile: #f5dfa8;          /* bg-stone-100 — mustard tile */
+  --gx-tile-deep: #eecb84;     /* bg-stone-200 */
+  --gx-tile-deeper: #e0b563;   /* bg-stone-300 */
+
+  --gx-ink-faint: #a67c46;     /* text-stone-400 */
+  --gx-ink-mute: #8a6339;      /* text-stone-500 */
+  --gx-ink-soft2: #6b4423;     /* text-stone-600 */
+  --gx-ink-soft: #5c3a1e;      /* text-stone-700 */
+  --gx-ink-strong: #4a2e15;    /* text-stone-800 */
+  --gx-ink: #3d2410;           /* text-stone-900 */
+  --gx-ink-deep: #2a1608;      /* text-stone-950 */
+
+  --gx-border-soft: #e8c88a;   /* border-stone-100/200 */
+  --gx-border-med: #d9a94f;    /* border-stone-300/400 */
+  --gx-border-strong: #7a4b22; /* border-stone-700/800 */
+
+  --gx-orange: #d9622b;        /* PRIMARY accent — burnt orange */
+  --gx-orange-hover: #c2531f;
+  --gx-orange-deep: #b8481c;
+
+  --gx-mustard: #e8b339;       /* mustard headline / highlight */
+
+  --gx-teal: #2a7f7a;          /* SECONDARY accent — turquoise */
+  --gx-teal-deep: #124542;
+  --gx-teal-tint: #cfeae6;
+
+  --gx-red: #a8341f;           /* danger / delete — brick red */
+  --gx-red-hover: #8a2717;
+  --gx-red-tint: #f3ded2;
+  --gx-red-border: #dba489;
+
+  --gx-shadow-color: 61, 36, 16; /* rgb of --gx-ink, used for hard shadows */
+}
+
+.dark {
+  --gx-bg: #2a1610;
+  --gx-card: #3d2117;
+  --gx-card-soft: #351b13;
+  --gx-tile: #45261a;
+  --gx-tile-deep: #522d1e;
+  --gx-tile-deeper: #603421;
+
+  --gx-ink-faint: #8a6b4a;
+  --gx-ink-mute: #b8996f;
+  --gx-ink-soft2: #d9c19c;
+  --gx-ink-soft: #e0c9a8;
+  --gx-ink-strong: #f0dfc4;
+  --gx-ink: #f5e6d0;
+  --gx-ink-deep: #fdf6e8;
+
+  --gx-border-soft: #5c3420;
+  --gx-border-med: #6b3f26;
+  --gx-border-strong: #a8703f;
+
+  --gx-orange: #e8813f;
+  --gx-orange-hover: #f2914f;
+  --gx-orange-deep: #d9622b;
+
+  --gx-mustard: #f0c458;
+
+  --gx-teal: #3aa39d;
+  --gx-teal-deep: #bfe9e4;
+  --gx-teal-tint: #1f4744;
+
+  --gx-red: #d9714f;
+  --gx-red-hover: #e8875f;
+  --gx-red-tint: #4a2318;
+  --gx-red-border: #7a4023;
+
+  --gx-shadow-color: 15, 7, 3;
+}
+
+/* -------------------------------------------------------------------------
+   2. TYPE — chunky rounded display font + friendly rounded body font
+   ------------------------------------------------------------------------- */
+@layer base {
+  body {
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--gx-bg);
+    color: var(--gx-ink);
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Baloo 2', 'Fredoka', sans-serif;
+  }
+
+  /* The app leans on `font-light` + large text sizes for its headings —
+     flip that to the chunky retro display face at a bold weight. */
+  .font-light,
+  .font-serif {
+    font-family: 'Baloo 2', 'Fredoka', sans-serif !important;
+    font-weight: 700 !important;
+    letter-spacing: 0 !important;
+  }
+}
+
+/* Dumbbell logo mark */
+.logo-dumbbell-circle {
+  background-color: var(--gx-orange) !important;
+  border: 3px solid var(--gx-ink) !important;
+}
+.logo-dumbbell-icon {
+  color: #fffaf0 !important;
+}
+.dark .logo-dumbbell-circle {
+  background-color: var(--gx-mustard) !important;
+  border-color: var(--gx-ink-deep) !important;
+}
+.dark .logo-dumbbell-icon {
+  color: #2a1608 !important;
+}
+
+/* -------------------------------------------------------------------------
+   3. SURFACE COLOR REMAPPING (light mode)
+   ------------------------------------------------------------------------- */
+body:not(.dark) header { background-color: rgba(255, 250, 240, 0.97) !important; border-color: var(--gx-border-soft) !important; }
+body:not(.dark) footer { background-color: var(--gx-tile) !important; border-color: var(--gx-border-soft) !important; }
+
+body:not(.dark) .bg-white { background-color: var(--gx-card) !important; }
+body:not(.dark) .bg-white\/95 { background-color: rgba(255, 250, 240, 0.95) !important; }
+body:not(.dark) .bg-white\/90 { background-color: rgba(255, 250, 240, 0.90) !important; }
+body:not(.dark) .bg-white\/80 { background-color: rgba(255, 250, 240, 0.80) !important; }
+body:not(.dark) .hover\:bg-white:hover { background-color: var(--gx-card) !important; }
+.border-white { border-color: #fffaf0 !important; }
+
+body:not(.dark) .bg-stone-50,
+body:not(.dark) .bg-stone-50\/50,
+body:not(.dark) .bg-stone-50\/60,
+body:not(.dark) .bg-stone-50\/80 { background-color: var(--gx-card-soft) !important; }
+body:not(.dark) .hover\:bg-stone-50\/50:hover { background-color: var(--gx-card-soft) !important; }
+
+body:not(.dark) .bg-stone-100,
+body:not(.dark) .bg-stone-100\/50,
+body:not(.dark) .bg-stone-100\/70,
+body:not(.dark) .bg-stone-100\/80 { background-color: var(--gx-tile) !important; }
+body:not(.dark) .hover\:bg-stone-100:hover,
+body:not(.dark) .hover\:bg-stone-100\/70:hover { background-color: var(--gx-tile-deep) !important; }
+
+body:not(.dark) .bg-stone-200,
+body:not(.dark) .bg-stone-200\/60,
+body:not(.dark) .bg-stone-200\/70,
+body:not(.dark) .bg-stone-200\/80 { background-color: var(--gx-tile-deep) !important; }
+body:not(.dark) .hover\:bg-stone-200:hover,
+body:not(.dark) .hover\:bg-stone-200\/60:hover,
+body:not(.dark) .hover\:bg-stone-200\/80:hover { background-color: var(--gx-tile-deeper) !important; }
+
+body:not(.dark) .bg-stone-300,
+body:not(.dark) .hover\:bg-stone-300:hover { background-color: var(--gx-tile-deeper) !important; }
+
+body:not(.dark) .bg-stone-700 { background-color: var(--gx-orange-hover) !important; }
+body:not(.dark) .hover\:bg-stone-700:hover { background-color: var(--gx-orange-hover) !important; }
+
+body:not(.dark) .bg-stone-800,
+body:not(.dark) .bg-stone-800\/60,
+body:not(.dark) .bg-stone-800\/80 { background-color: var(--gx-orange-hover) !important; }
+body:not(.dark) .hover\:bg-stone-800:hover { background-color: var(--gx-orange-hover) !important; }
+body:not(.dark) .disabled\:hover\:bg-stone-800:disabled:hover { background-color: var(--gx-orange) !important; }
+
+body:not(.dark) .bg-stone-900,
+body:not(.dark) .bg-stone-900\/60,
+body:not(.dark) .bg-stone-900\/90,
+body:not(.dark) .bg-stone-900\/95 { background-color: var(--gx-orange) !important; }
+body:not(.dark) .hover\:bg-stone-900:hover { background-color: var(--gx-orange-hover) !important; }
+
+body:not(.dark) .bg-stone-950 { background-color: var(--gx-orange-deep) !important; }
+body:not(.dark) .bg-stone-950\/60 { background-color: rgba(61, 36, 16, 0.6) !important; }
+body:not(.dark) .bg-stone-950\/70 { background-color: rgba(61, 36, 16, 0.7) !important; }
+body:not(.dark) .bg-stone-950\/80 { background-color: rgba(61, 36, 16, 0.8) !important; }
+body:not(.dark) .bg-stone-950\/85 { background-color: rgba(61, 36, 16, 0.85) !important; }
+body:not(.dark) .bg-stone-950\/90 { background-color: rgba(61, 36, 16, 0.9) !important; }
+
+body:not(.dark) .ring-stone-900,
+body:not(.dark) .focus\:ring-stone-900:focus { --tw-ring-color: var(--gx-orange) !important; }
+
+/* Text colors */
+body:not(.dark) .text-stone-900,
+body:not(.dark) .hover\:text-stone-900:hover { color: var(--gx-ink) !important; }
+body:not(.dark) .text-stone-950,
+body:not(.dark) .hover\:text-stone-950:hover { color: var(--gx-ink-deep) !important; }
+body:not(.dark) .text-stone-800,
+body:not(.dark) .hover\:text-stone-800:hover { color: var(--gx-ink-strong) !important; }
+body:not(.dark) .text-stone-700,
+body:not(.dark) .hover\:text-stone-700:hover { color: var(--gx-ink-soft) !important; }
+body:not(.dark) .text-stone-600 { color: var(--gx-ink-soft2) !important; }
+body:not(.dark) .text-stone-500,
+body:not(.dark) .hover\:text-stone-500:hover { color: var(--gx-ink-mute) !important; }
+body:not(.dark) .text-stone-400 { color: var(--gx-ink-faint) !important; }
+body:not(.dark) .text-stone-300,
+body:not(.dark) .text-stone-200,
+body:not(.dark) .hover\:text-stone-200:hover { color: var(--gx-card) !important; }
+body:not(.dark) .text-stone-100 { color: var(--gx-card) !important; }
+body:not(.dark) .placeholder-stone-400::placeholder { color: var(--gx-ink-faint) !important; }
+
+/* Borders */
+body:not(.dark) .border-stone-100,
+body:not(.dark) .border-stone-200,
+body:not(.dark) .border-stone-200\/60,
+body:not(.dark) .border-stone-200\/80 { border-color: var(--gx-border-soft) !important; }
+body:not(.dark) .border-stone-300,
+body:not(.dark) .border-stone-300\/50,
+body:not(.dark) .border-stone-300\/60,
+body:not(.dark) .border-stone-400,
+body:not(.dark) .hover\:border-stone-300:hover,
+body:not(.dark) .hover\:border-stone-400:hover { border-color: var(--gx-border-med) !important; }
+body:not(.dark) .border-stone-500 { border-color: var(--gx-border-strong) !important; }
+body:not(.dark) .border-stone-700,
+body:not(.dark) .border-stone-700\/60,
+body:not(.dark) .border-stone-800,
+body:not(.dark) .hover\:border-stone-700:hover { border-color: var(--gx-border-strong) !important; }
+body:not(.dark) .border-stone-900,
+body:not(.dark) .hover\:border-stone-900:hover,
+body:not(.dark) .focus\:border-stone-900:focus { border-color: var(--gx-orange) !important; }
+body:not(.dark) .focus\:border-stone-400:focus,
+body:not(.dark) .focus\:border-stone-500:focus { border-color: var(--gx-orange) !important; }
+
+/* Rose (danger / delete) -> brick red */
+.bg-rose-50, .bg-rose-50\/20, .bg-rose-50\/30, .bg-rose-50\/70,
+.hover\:bg-rose-50:hover { background-color: var(--gx-red-tint) !important; }
+.bg-rose-100, .hover\:bg-rose-100:hover, .bg-rose-200, .hover\:bg-rose-200:hover { background-color: var(--gx-red-border) !important; }
+.bg-rose-600, .hover\:bg-rose-600:hover { background-color: var(--gx-red) !important; }
+.bg-rose-700, .hover\:bg-rose-700:hover { background-color: var(--gx-red-hover) !important; }
+.border-rose-200, .border-rose-300, .hover\:border-rose-300:hover, .hover\:border-rose-400:hover { border-color: var(--gx-red-border) !important; }
+.text-rose-300 { color: var(--gx-red-tint) !important; }
+.text-rose-400, .hover\:text-rose-400:hover { color: var(--gx-red-hover) !important; }
+.text-rose-500 { color: var(--gx-red) !important; }
+.text-rose-600, .hover\:text-rose-600:hover { color: var(--gx-red) !important; }
+.text-rose-700 { color: var(--gx-red-hover) !important; }
+.text-rose-800 { color: var(--gx-red-hover) !important; }
+.text-rose-950 { color: var(--gx-red-hover) !important; }
+
+/* Amber / emerald / indigo -> teal (the "contrast pop" accent) */
+.bg-amber-100, .bg-emerald-50, .bg-emerald-50\/60, .bg-emerald-50\/80, .bg-emerald-200\/80,
+.bg-indigo-100, .bg-indigo-200, .hover\:bg-indigo-200:hover, .bg-emerald-500\/10 { background-color: var(--gx-teal-tint) !important; }
+.bg-amber-400 { background-color: var(--gx-teal) !important; }
+.border-amber-200\/80, .border-amber-300, .border-amber-300\/80, .border-amber-500\/30,
+.border-emerald-200, .border-emerald-300, .border-emerald-500\/30, .border-indigo-300 { border-color: var(--gx-teal) !important; }
+.text-amber-200, .text-amber-300, .text-amber-400, .text-amber-400\/90, .text-amber-500,
+.text-emerald-400 { color: var(--gx-teal) !important; }
+.text-amber-700, .text-amber-900, .text-amber-950,
+.text-emerald-600, .text-emerald-700, .text-emerald-800, .text-emerald-900, .text-emerald-950,
+.text-indigo-400, .text-indigo-700, .text-indigo-900 { color: var(--gx-teal-deep) !important; }
+
+/* -------------------------------------------------------------------------
+   4. DARK MODE — warm maroon/brown base (not cold black)
+   ------------------------------------------------------------------------- */
+html.dark, body.dark, .dark { color-scheme: dark; }
+
+body.dark, .dark {
+  background-color: var(--gx-bg) !important;
+  color: var(--gx-ink) !important;
+}
+
+.dark header { background-color: rgba(42, 22, 16, 0.95) !important; border-color: var(--gx-border-soft) !important; }
+.dark footer { background-color: var(--gx-card-soft) !important; border-color: var(--gx-border-soft) !important; }
+
+.dark .bg-white,
+.dark .bg-white\/80, .dark .bg-white\/90, .dark .bg-white\/95,
+.dark .hover\:bg-white:hover { background-color: var(--gx-card) !important; color: var(--gx-ink); }
+
+.dark .bg-stone-50, .dark .bg-stone-50\/50, .dark .bg-stone-50\/60, .dark .bg-stone-50\/80,
+.dark .hover\:bg-stone-50\/50:hover { background-color: var(--gx-card-soft) !important; color: var(--gx-ink); }
+
+.dark .bg-stone-100, .dark .bg-stone-100\/50, .dark .bg-stone-100\/70, .dark .bg-stone-100\/80,
+.dark .dark\:bg-stone-100,
+.dark .hover\:bg-stone-100:hover, .dark .hover\:bg-stone-100\/70:hover { background-color: var(--gx-tile) !important; color: var(--gx-ink); }
+
+.dark .bg-stone-200, .dark .bg-stone-200\/60, .dark .bg-stone-200\/70, .dark .bg-stone-200\/80,
+.dark .hover\:bg-stone-200:hover, .dark .hover\:bg-stone-200\/60:hover, .dark .hover\:bg-stone-200\/80:hover,
+.dark .bg-stone-300, .dark .hover\:bg-stone-300:hover { background-color: var(--gx-tile-deep) !important; }
+
+.dark .bg-stone-700,
+.dark .dark\:hover\:bg-stone-700:hover,
+.dark .hover\:bg-stone-700:hover { background-color: var(--gx-orange-hover) !important; }
+
+.dark .bg-stone-800, .dark .bg-stone-800\/60, .dark .bg-stone-800\/80,
+.dark .dark\:bg-stone-800, .dark .dark\:bg-stone-800\/80,
+.dark .hover\:bg-stone-800:hover, .dark .dark\:hover\:bg-stone-800:hover { background-color: var(--gx-orange-hover) !important; }
+
+.dark .bg-stone-900, .dark .bg-stone-900\/60, .dark .bg-stone-900\/90, .dark .bg-stone-900\/95,
+.dark .dark\:bg-stone-900\/90,
+.dark .hover\:bg-stone-900:hover { background-color: var(--gx-orange) !important; }
+
+.dark .bg-stone-950 { background-color: var(--gx-orange-deep) !important; }
+.dark .bg-stone-950\/60 { background-color: rgba(0, 0, 0, 0.6) !important; }
+.dark .bg-stone-950\/70 { background-color: rgba(0, 0, 0, 0.7) !important; }
+.dark .bg-stone-950\/80 { background-color: rgba(0, 0, 0, 0.8) !important; }
+.dark .bg-stone-950\/85 { background-color: rgba(0, 0, 0, 0.85) !important; }
+.dark .bg-stone-950\/90 { background-color: rgba(0, 0, 0, 0.9) !important; }
+
+.dark .ring-stone-900, .dark .focus\:ring-stone-900:focus { --tw-ring-color: var(--gx-orange) !important; }
+
+.dark .text-stone-900, .dark .text-stone-950, .dark .text-stone-800,
+.dark .dark\:text-stone-950, .dark .dark\:text-stone-800,
+.dark .hover\:text-stone-900:hover, .dark .hover\:text-stone-950:hover, .dark .hover\:text-stone-800:hover {
+  color: var(--gx-ink) !important;
+}
+.dark .text-stone-700, .dark .text-stone-600, .dark .hover\:text-stone-700:hover { color: var(--gx-ink-soft) !important; }
+.dark .text-stone-500, .dark .text-stone-400, .dark .hover\:text-stone-500:hover { color: var(--gx-ink-mute) !important; }
+.dark .text-stone-300, .dark .dark\:text-stone-300, .dark .hover\:text-stone-200:hover, .dark .text-stone-200,
+.dark .dark\:text-stone-200 { color: var(--gx-ink-faint) !important; }
+.dark .text-stone-100, .dark .dark\:text-stone-100 { color: var(--gx-ink) !important; }
+.dark .dark\:text-white { color: #fdf6e8 !important; }
+
+.dark .border-stone-200, .dark .border-stone-200\/60, .dark .border-stone-200\/80,
+.dark .border-stone-300, .dark .border-stone-300\/50, .dark .border-stone-300\/60,
+.dark .border-stone-100, .dark .dark\:border-stone-100,
+.dark .hover\:border-stone-300:hover { border-color: var(--gx-border-soft) !important; }
+.dark .border-stone-400, .dark .border-stone-500, .dark .hover\:border-stone-400:hover { border-color: var(--gx-border-med) !important; }
+.dark .border-stone-700, .dark .border-stone-700\/60, .dark .border-stone-800,
+.dark .dark\:border-stone-700, .dark .dark\:border-stone-700\/60, .dark .dark\:border-stone-800,
+.dark .hover\:border-stone-700:hover, .dark .dark\:hover\:border-stone-700:hover { border-color: var(--gx-border-med) !important; }
+.dark .border-stone-900, .dark .hover\:border-stone-900:hover,
+.dark .focus\:border-stone-400:focus, .dark .focus\:border-stone-500:focus, .dark .focus\:border-stone-900:focus { border-color: var(--gx-orange) !important; }
+
+.dark .dark\:text-amber-200 { color: var(--gx-teal) !important; }
+.dark .dark\:border-amber-800 { border-color: var(--gx-teal) !important; }
+.dark .dark\:bg-amber-950\/80 { background-color: var(--gx-teal-tint) !important; }
+
+.dark input, .dark select, .dark textarea {
+  background-color: var(--gx-card-soft) !important;
+  color: var(--gx-ink) !important;
+  border-color: var(--gx-border-med) !important;
+}
+.dark input::placeholder, .dark textarea::placeholder { color: var(--gx-ink-faint) !important; }
+
+/* Selection color */
+.selection\:bg-stone-900::selection { background-color: var(--gx-orange) !important; }
+.selection\:text-white::selection { color: #fffaf0 !important; }
+
+/* -------------------------------------------------------------------------
+   5. SHAPE LANGUAGE — chunky borders + sticker/badge hard shadows
+   ------------------------------------------------------------------------- */
+* {
+  border-color: var(--gx-border-soft);
+}
+
+.border { border-width: 2px !important; }
+.border-2 { border-width: 3px !important; }
+.border-dashed { border-width: 3px !important; }
+.border-t, .border-b { border-top-width: 2px !important; border-bottom-width: 2px !important; }
+
+/* Bigger surfaces (cards, panels, modals) get an extra-chunky border */
+[class*="rounded-3xl"].border,
+[class*="rounded-2xl"].border { border-width: 3px !important; }
+
+/* Hard "sticker" offset shadows instead of soft blurred ones */
+.shadow-2xs { box-shadow: 2px 2px 0 0 rgba(var(--gx-shadow-color), 0.9) !important; }
+.shadow-xs { box-shadow: 3px 3px 0 0 rgba(var(--gx-shadow-color), 0.9) !important; }
+.shadow-sm { box-shadow: 3px 3px 0 0 rgba(var(--gx-shadow-color), 0.9) !important; }
+.shadow-md { box-shadow: 4px 4px 0 0 rgba(var(--gx-shadow-color), 0.9) !important; }
+.shadow-lg { box-shadow: 5px 5px 0 0 rgba(var(--gx-shadow-color), 0.9) !important; }
+.shadow-xl { box-shadow: 6px 6px 0 0 rgba(var(--gx-shadow-color), 0.9) !important; }
+.shadow-2xl { box-shadow: 8px 8px 0 0 rgba(var(--gx-shadow-color), 0.9) !important; }
+.shadow-inner { box-shadow: inset 2px 2px 0 0 rgba(var(--gx-shadow-color), 0.25) !important; }
+
+/* Tactile press feedback on interactive elements */
+button, [role="button"], a {
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+button:not(:disabled):active {
+  transform: translate(2px, 2px);
+}
+
+/* -------------------------------------------------------------------------
+   6. RETRO TEXTURE — dotted halftone accents (pure CSS, no images)
+   ------------------------------------------------------------------------- */
+body {
+  background-image:
+    radial-gradient(circle, rgba(61, 36, 16, 0.07) 1.5px, transparent 1.5px);
+  background-size: 16px 16px;
+  background-attachment: fixed;
+}
+.dark body, body.dark {
+  background-image:
+    radial-gradient(circle, rgba(245, 230, 208, 0.05) 1.5px, transparent 1.5px);
+  background-size: 16px 16px;
+  background-attachment: fixed;
+}
+
+header {
+  position: relative;
+}
+/* Scalloped / wavy bottom edge under the sticky header, like a vintage
+   ticket or poster trim */
+header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -9px;
+  height: 9px;
+  background-image: radial-gradient(circle at 9px 0, transparent 9px, var(--gx-bg) 9.5px);
+  background-size: 18px 9px;
+  background-repeat: repeat-x;
+  pointer-events: none;
+}
+
+/* -------------------------------------------------------------------------
+   7. MISC
+   ------------------------------------------------------------------------- */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--gx-tile-deeper); border-radius: 9999px; border: 2px solid var(--gx-bg); }
+.dark ::-webkit-scrollbar-thumb { background: var(--gx-border-med); border: 2px solid var(--gx-bg); }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn { animation: fadeIn 0.18s ease-out; }
+
+/* =========================================================================
+   DESIGN NOTES
+   - Palette: mustard #e8b339 (highlights), burnt orange #d9622b (primary /
+     active accent, replaces the app's near-black stone-900 CTAs), teal
+     #2a7f7a (secondary "pop" accent, replaces amber/emerald/indigo badges),
+     cream #f5ead9 (page bg), brick red #a8341f (danger/delete, replaces
+     rose).
+   - Type: Baloo 2 for headings/display (the app's `font-light` utility is
+     globally flipped to a bold Baloo 2 treatment), Nunito for body copy.
+   - Dark mode: warm maroon/brown (#2a1610 page / #3d2117 cards) instead of
+     a cold black, so the retro warmth survives in dark mode too. Orange and
+     teal accents are brightened slightly in dark mode for legibility.
+   - Shape: 2-3px chunky borders on all bordered elements (3px on big
+     rounded-2xl/3xl cards), hard 0-blur "sticker" offset shadows instead of
+     soft drop shadows, a subtle dotted halftone texture on the page
+     background, and a scalloped/wavy trim under the sticky header.
+   ========================================================================= */

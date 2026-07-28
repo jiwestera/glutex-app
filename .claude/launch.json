@@ -1,0 +1,47 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "glutex-dev",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "set PATH=C:\\Users\\jiwes\\AppData\\Local\\NodeJS\\node-v24.18.0-win-x64;%PATH% && cd Hanna-Westera-main && npm run dev"],
+      "port": 3000
+    },
+    {
+      "name": "glutex-original-dev",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "set PATH=C:\\Users\\jiwes\\AppData\\Local\\NodeJS\\node-v24.18.0-win-x64;%PATH% && cd Hanna-Westera-original && npm run dev"],
+      "port": 3001
+    },
+    {
+      "name": "glutex-miami-vice-dev",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "set PATH=C:\\Users\\jiwes\\AppData\\Local\\NodeJS\\node-v24.18.0-win-x64;%PATH% && cd Hanna-Westera-styles\\miami-vice && npm run dev"],
+      "port": 3002
+    },
+    {
+      "name": "glutex-bold-athletic-dev",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "set PATH=C:\\Users\\jiwes\\AppData\\Local\\NodeJS\\node-v24.18.0-win-x64;%PATH% && cd Hanna-Westera-styles\\bold-athletic && npm run dev"],
+      "port": 3003
+    },
+    {
+      "name": "glutex-premium-wellness-dev",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "set PATH=C:\\Users\\jiwes\\AppData\\Local\\NodeJS\\node-v24.18.0-win-x64;%PATH% && cd Hanna-Westera-styles\\premium-wellness && npm run dev"],
+      "port": 3004
+    },
+    {
+      "name": "glutex-dark-performance-hud-dev",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "set PATH=C:\\Users\\jiwes\\AppData\\Local\\NodeJS\\node-v24.18.0-win-x64;%PATH% && cd Hanna-Westera-styles\\dark-performance-hud && npm run dev"],
+      "port": 3005
+    },
+    {
+      "name": "glutex-retro-gym-dev",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "set PATH=C:\\Users\\jiwes\\AppData\\Local\\NodeJS\\node-v24.18.0-win-x64;%PATH% && cd Hanna-Westera-styles\\retro-gym && npm run dev"],
+      "port": 3006
+    }
+  ]
+}

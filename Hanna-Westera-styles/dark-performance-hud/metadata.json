@@ -1,0 +1,6 @@
+{
+  "name": "Glutex",
+  "description": "Science-backed glute hypertrophy workout planner with customizable 2-6 day splits, dedicated hip mobility routines, exercise form guides, progressive overload tracking, and an AI Glute Coach.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,173 @@
+@import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
+
+/* Dark mode dumbbell logo explicit styling override */
+.dark .logo-dumbbell-circle {
+  background-color: #fce8dc !important;
+}
+
+.dark .logo-dumbbell-icon {
+  color: #1c1917 !important;
+}
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #fdf8f4; /* Lightest surface: page background */
+    color: #292524; /* stone-900 */
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  .font-serif {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+}
+
+/* Light Mode Warm Peachy Theme Surface Overrides (Replaces harsh pure white with warm peachy cream) */
+body:not(.dark) header {
+  background-color: rgba(191, 156, 130, 0.95) !important;
+  border-color: #a8826a !important;
+}
+
+body:not(.dark) .bg-white {
+  background-color: #eeddc9 !important;
+}
+
+body:not(.dark) .bg-white\/95 {
+  background-color: rgba(238, 221, 201, 0.95) !important;
+}
+
+body:not(.dark) .bg-white\/90 {
+  background-color: rgba(238, 221, 201, 0.90) !important;
+}
+
+body:not(.dark) .bg-white\/80 {
+  background-color: rgba(238, 221, 201, 0.80) !important;
+}
+
+body:not(.dark) .bg-stone-50 {
+  background-color: #e6d3bd !important;
+}
+
+body:not(.dark) .bg-stone-100,
+body:not(.dark) .bg-stone-100\/80,
+body:not(.dark) .bg-stone-100\/50 {
+  background-color: #ddc7ab !important;
+}
+
+body:not(.dark) .border-stone-200,
+body:not(.dark) .border-stone-200\/60,
+body:not(.dark) .border-stone-200\/80 {
+  border-color: #cbae8e !important;
+}
+
+/* Dark Mode Global System Overrides */
+html.dark,
+body.dark,
+.dark {
+  color-scheme: dark;
+}
+
+body.dark,
+.dark {
+  background-color: #282320 !important;
+  color: #f5f5f4 !important;
+}
+
+.dark header {
+  background-color: rgba(26, 23, 21, 0.95) !important;
+  border-color: #3d3530 !important;
+}
+
+.dark footer {
+  background-color: #1a1715 !important;
+  border-color: #3d3530 !important;
+}
+
+.dark .bg-white,
+.dark .bg-white\/80,
+.dark .bg-white\/90,
+.dark .bg-white\/95 {
+  background-color: #181615 !important;
+  color: #ffffff;
+}
+
+.dark .bg-stone-50,
+.dark .bg-stone-50\/80,
+.dark .bg-stone-50\/50 {
+  background-color: #221f1d !important;
+  color: #f5f5f4;
+}
+
+.dark .bg-stone-100,
+.dark .bg-stone-100\/80,
+.dark .bg-stone-100\/50 {
+  background-color: #282421 !important;
+  color: #f5f5f4;
+}
+
+.dark .bg-stone-200,
+.dark .bg-stone-200\/60,
+.dark .bg-stone-200\/80 {
+  background-color: #322d29 !important;
+}
+
+.dark .border-stone-200,
+.dark .border-stone-200\/60,
+.dark .border-stone-200\/80,
+.dark .border-stone-300,
+.dark .border-stone-300\/50,
+.dark .border-stone-300\/60,
+.dark .border-stone-100 {
+  border-color: #332d29 !important;
+}
+
+.dark .text-stone-900,
+.dark .text-stone-950,
+.dark .text-stone-800 {
+  color: #ffffff;
+}
+
+.dark .text-stone-700,
+.dark .text-stone-600 {
+  color: #f0eee8;
+}
+
+.dark .text-stone-500,
+.dark .text-stone-400 {
+  color: #d6d3d1;
+}
+
+.dark .text-stone-300 {
+  color: #a8a29e;
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #221f1d !important;
+  color: #ffffff !important;
+  border-color: #332d29 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #a8a29e !important;
+}
+
+/* Custom scrollbar for sleek minimal look */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d6c0aa;
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #38332e;
+}
+

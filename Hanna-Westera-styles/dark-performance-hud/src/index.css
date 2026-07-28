@@ -1,0 +1,527 @@
+@import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
+
+/* ==========================================================================
+   DARK PERFORMANCE HUD — theme tokens
+   A sports-science telemetry aesthetic: near-black void, electric cyan as the
+   primary signal color, acid lime for positive/PR readings, a hot alert-red
+   for warnings, glassmorphism panels with glowing hairline borders, and a
+   mono/sans typographic split (mono = data, sans = labels/headlines).
+
+   Dark/light strategy: this theme is dark-only in spirit. The app's existing
+   `.dark` toggle is preserved structurally (see App.tsx), but the "light"
+   branch (body:not(.dark)) is restyled as a lighter graphite/slate HUD
+   variant rather than reverting to white — the telemetry look survives in
+   both states, only the base value darkness shifts.
+   ========================================================================== */
+
+@theme {
+  --font-sans: 'Space Grotesk', 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+:root {
+  --hud-void: #05070a;
+  --hud-void-graphite: #315c63;
+
+  --hud-panel: rgba(13, 19, 24, 0.62);
+  --hud-panel-graphite: rgba(82, 194, 214, 0.22);
+  --hud-glow-rgb: 63, 216, 243;
+
+  --hud-panel-solid: #0b1016;
+  --hud-panel-solid-graphite: #232a33;
+
+  --hud-surface: #0e141b;
+  --hud-surface-graphite: #6b6280;
+
+  --hud-cyan: #00d9ff;
+  --hud-cyan-bright: #00f0ff;
+  --hud-cyan-rgb: 0, 217, 255;
+  --hud-cyan-bright-rgb: 0, 240, 255;
+  --hud-cyan-dim: rgba(var(--hud-cyan-rgb), 0.16);
+  --hud-cyan-border: rgba(var(--hud-cyan-rgb), 0.28);
+
+  --hud-lime: #c6ff00;
+  --hud-lime-dim: rgba(198, 255, 0, 0.14);
+
+  --hud-alert: #ff3b6a;
+  --hud-alert-dim: rgba(255, 59, 106, 0.14);
+
+  --hud-amber: #ffb800;
+  --hud-amber-dim: rgba(255, 184, 0, 0.14);
+
+  --hud-violet: #7cf7ff;
+
+  --hud-text-hi: #eef8fb;
+  --hud-text-mid: #9fb4c2;
+  --hud-text-lo: #64798a;
+  --hud-text-faint: #46586a;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--hud-void);
+    color: var(--hud-text-hi);
+    transition: background-color 0.25s ease, color 0.25s ease;
+    background-image:
+      radial-gradient(ellipse 120% 60% at 50% -10%, rgba(var(--hud-cyan-rgb), 0.08), transparent 60%),
+      repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.012) 0px, rgba(255, 255, 255, 0.012) 1px, transparent 1px, transparent 3px);
+  }
+
+  body:not(.dark) {
+    background-color: var(--hud-void-graphite);
+    background-image:
+      radial-gradient(ellipse 120% 60% at 50% -10%, rgba(var(--hud-glow-rgb), 0.22), transparent 60%),
+      repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0px, rgba(255, 255, 255, 0.025) 1px, transparent 1px, transparent 3px);
+  }
+
+  .font-serif {
+    font-family: 'Rajdhani', var(--font-sans);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: 0.01em;
+  }
+
+  ::selection {
+    background-color: var(--hud-cyan);
+    color: #05070a;
+  }
+}
+
+/* ==========================================================================
+   Numeric / telemetry readouts — the mono-for-numbers signature
+   ========================================================================== */
+.stat-mono,
+.font-mono {
+  font-family: var(--font-mono) !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ==========================================================================
+   Glass HUD panels + corner-bracket decoration utilities
+   ========================================================================== */
+.hud-panel {
+  background: var(--hud-panel);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--hud-cyan-border);
+}
+
+.hud-corners {
+  position: relative;
+}
+.hud-corners::before,
+.hud-corners::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.85;
+}
+.hud-corners::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid var(--hud-cyan-bright);
+  border-left: 2px solid var(--hud-cyan-bright);
+}
+.hud-corners::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid var(--hud-cyan-bright);
+  border-right: 2px solid var(--hud-cyan-bright);
+}
+.hud-corners-lime::before,
+.hud-corners-lime::after {
+  border-color: var(--hud-lime);
+}
+
+.glow-text-cyan {
+  color: var(--hud-cyan-bright);
+  text-shadow: 0 0 12px rgba(var(--hud-cyan-bright-rgb), 0.45);
+}
+.glow-text-lime {
+  color: var(--hud-lime);
+  text-shadow: 0 0 12px rgba(198, 255, 0, 0.4);
+}
+.glow-border-cyan {
+  box-shadow: 0 0 0 1px rgba(var(--hud-cyan-rgb), 0.35), 0 0 18px -4px rgba(var(--hud-cyan-rgb), 0.55);
+}
+.glow-border-lime {
+  box-shadow: 0 0 0 1px rgba(198, 255, 0, 0.35), 0 0 18px -4px rgba(198, 255, 0, 0.55);
+}
+
+@keyframes hud-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+@keyframes hud-scan {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 40px; }
+}
+.hud-live-dot {
+  box-shadow: 0 0 8px 2px currentColor;
+  animation: hud-pulse 1.6s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   Logo mark
+   ========================================================================== */
+.logo-dumbbell-circle {
+  background: linear-gradient(135deg, var(--hud-cyan) 0%, var(--hud-cyan-bright) 100%) !important;
+  box-shadow: 0 0 16px -2px rgba(var(--hud-cyan-rgb), 0.7);
+}
+.logo-dumbbell-icon {
+  color: #05070a !important;
+}
+
+/* ==========================================================================
+   Corner-radius tightening — trades the original soft/rounded shape
+   language for a tighter, more technical HUD silhouette.
+   ========================================================================== */
+.rounded-3xl { border-radius: 1.1rem !important; }
+.rounded-2xl { border-radius: 0.75rem !important; }
+.rounded-xl  { border-radius: 0.6rem !important; }
+
+/* ==========================================================================
+   Global surface retheme — maps every peach/stone Tailwind utility used
+   throughout the component tree onto the HUD token system, for both the
+   near-black (.dark) and graphite (:not(.dark)) branches.
+   ========================================================================== */
+
+header, footer {
+  background-color: rgba(8, 11, 15, 0.85) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: var(--hud-cyan-border) !important;
+}
+/* Panel surfaces (bg-white / bg-stone-50 family) => glass panels */
+.bg-white,
+.bg-white\/95,
+.bg-white\/90,
+.bg-white\/80,
+.bg-stone-50,
+.bg-stone-50\/80,
+.bg-stone-50\/70,
+.bg-stone-50\/60,
+.bg-stone-50\/50 {
+  background-color: var(--hud-panel) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--hud-text-hi);
+}
+
+/* Solid modal panels — dialogs (Options, confirmations) read poorly as
+   see-through glass, so they get a near-opaque HUD console surface instead
+   of the translucent card treatment used for in-page content. */
+.hud-modal-solid.bg-white {
+  background-color: var(--hud-panel-solid) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: var(--hud-text-hi);
+}
+body:not(.dark) .hud-modal-solid.bg-white {
+  background-color: var(--hud-panel-solid-graphite) !important;
+}
+
+.bg-stone-100,
+.bg-stone-100\/80,
+.bg-stone-100\/70,
+.bg-stone-100\/50 {
+  background-color: rgba(var(--hud-cyan-rgb), 0.06) !important;
+  color: var(--hud-text-hi);
+}
+
+.bg-stone-200,
+.bg-stone-200\/80,
+.bg-stone-200\/70,
+.bg-stone-200\/60 {
+  background-color: rgba(var(--hud-cyan-rgb), 0.12) !important;
+  color: var(--hud-text-hi);
+}
+
+.bg-stone-300 { background-color: rgba(var(--hud-cyan-rgb), 0.2) !important; }
+
+/* Dark charcoal surfaces (stone-700/800/900/950) => deep HUD console panels */
+.bg-stone-700,
+.bg-stone-800,
+.bg-stone-800\/80,
+.bg-stone-800\/60,
+.bg-stone-900,
+.bg-stone-900\/95,
+.bg-stone-900\/90,
+.bg-stone-900\/60,
+.bg-stone-950,
+.bg-stone-950\/90,
+.bg-stone-950\/85,
+.bg-stone-950\/80,
+.bg-stone-950\/70,
+.bg-stone-950\/60 {
+  background-color: var(--hud-panel-solid) !important;
+  color: var(--hud-text-hi) !important;
+  border-color: var(--hud-cyan-border);
+}
+
+body:not(.dark) .bg-white,
+body:not(.dark) .bg-white\/95,
+body:not(.dark) .bg-white\/90,
+body:not(.dark) .bg-white\/80,
+body:not(.dark) .bg-stone-50,
+body:not(.dark) .bg-stone-50\/80,
+body:not(.dark) .bg-stone-50\/70,
+body:not(.dark) .bg-stone-50\/60,
+body:not(.dark) .bg-stone-50\/50 {
+  background-color: var(--hud-panel-graphite) !important;
+}
+body:not(.dark) .bg-stone-700,
+body:not(.dark) .bg-stone-800,
+body:not(.dark) .bg-stone-800\/80,
+body:not(.dark) .bg-stone-800\/60,
+body:not(.dark) .bg-stone-900,
+body:not(.dark) .bg-stone-900\/95,
+body:not(.dark) .bg-stone-900\/90,
+body:not(.dark) .bg-stone-900\/60,
+body:not(.dark) .bg-stone-950,
+body:not(.dark) .bg-stone-950\/90,
+body:not(.dark) .bg-stone-950\/85,
+body:not(.dark) .bg-stone-950\/80,
+body:not(.dark) .bg-stone-950\/70,
+body:not(.dark) .bg-stone-950\/60 {
+  background-color: var(--hud-panel-solid-graphite) !important;
+}
+
+/* Borders */
+.border-stone-100,
+.border-stone-200,
+.border-stone-200\/60,
+.border-stone-200\/80,
+.border-stone-300\/50,
+.border-stone-300\/60 {
+  border-color: var(--hud-cyan-border) !important;
+}
+.border-stone-300,
+.border-stone-400,
+.border-stone-500,
+.border-stone-700,
+.border-stone-700\/60,
+.border-stone-800,
+.border-stone-900 {
+  border-color: rgba(var(--hud-cyan-rgb), 0.45) !important;
+}
+.ring-stone-900 {
+  --tw-ring-color: rgba(var(--hud-cyan-rgb), 0.5) !important;
+}
+
+/* Text */
+.text-stone-900,
+.text-stone-950,
+.text-stone-800 {
+  color: var(--hud-text-hi) !important;
+}
+.text-stone-700,
+.text-stone-600 {
+  color: var(--hud-text-mid) !important;
+}
+.text-stone-500,
+.text-stone-400 {
+  color: var(--hud-text-lo) !important;
+}
+.text-stone-300,
+.text-stone-200,
+.text-stone-100 {
+  color: var(--hud-text-faint) !important;
+}
+.dark .text-stone-300,
+.dark .text-stone-200,
+.dark .text-stone-100 {
+  color: var(--hud-text-mid) !important;
+}
+
+/* Dark "chip" badges (bg-stone-900 + text-stone-100, e.g. biomechanics-type
+   pills like "SHORTENED POSITION") read low-contrast in light mode since the
+   lightened panel-solid-graphite background sits close to the faint text
+   tone. Bump just this badge combo brighter in light mode only. */
+body:not(.dark) .bg-stone-900.text-stone-100,
+body:not(.dark) .bg-stone-950.text-stone-100 {
+  color: var(--hud-text-hi) !important;
+}
+
+.placeholder-stone-400::placeholder {
+  color: var(--hud-text-faint) !important;
+}
+
+input, select, textarea {
+  background-color: rgba(var(--hud-cyan-rgb), 0.04) !important;
+  color: var(--hud-text-hi) !important;
+  border-color: var(--hud-cyan-border) !important;
+  font-family: var(--font-sans);
+}
+
+/* Native <select> chrome (background/border/text) resists CSS on some
+   platforms (notably Windows Chrome) unless appearance is disabled. Draw a
+   themed chevron in its place since removing appearance also removes the
+   native arrow. */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239fb4c2' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.75rem center !important;
+  background-size: 14px !important;
+  padding-right: 2.25rem !important;
+}
+select::-ms-expand {
+  display: none;
+}
+input::placeholder, textarea::placeholder {
+  color: var(--hud-text-lo) !important;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none !important;
+  border-color: var(--hud-cyan) !important;
+  box-shadow: 0 0 0 3px rgba(var(--hud-cyan-rgb), 0.2) !important;
+}
+.focus\:border-stone-400:focus,
+.focus\:border-stone-900:focus,
+.focus\:border-stone-500:focus {
+  border-color: var(--hud-cyan) !important;
+}
+.focus\:ring-stone-900:focus {
+  --tw-ring-color: rgba(var(--hud-cyan-rgb), 0.35) !important;
+}
+
+/* ==========================================================================
+   Semantic accent remap
+   rose   -> alert red   (attention / destructive / streak-flame)
+   emerald-> acid lime   (success / PR / positive)
+   amber  -> HUD amber   (secondary highlight / caution)
+   indigo -> violet-cyan (rare tertiary accent)
+
+   Uses exact utility-class selectors (not attribute-contains) so that
+   hover:/dark: prefixed variants are addressed separately and idle states
+   aren't accidentally painted with their hover color.
+   ========================================================================== */
+.bg-rose-50, .bg-rose-50\/20, .bg-rose-50\/30, .bg-rose-50\/70, .bg-rose-100 {
+  background-color: var(--hud-alert-dim) !important;
+}
+.bg-rose-600, .bg-rose-700 { background-color: var(--hud-alert) !important; color: #05070a !important; }
+.text-rose-300, .text-rose-500, .text-rose-600, .text-rose-700, .text-rose-800, .text-rose-950 {
+  color: var(--hud-alert) !important;
+}
+.border-rose-200, .border-rose-300 { border-color: rgba(255, 59, 106, 0.45) !important; }
+.hover\:bg-rose-50:hover, .hover\:bg-rose-100:hover, .hover\:bg-rose-200:hover {
+  background-color: var(--hud-alert-dim) !important;
+}
+.hover\:bg-rose-600:hover, .hover\:bg-rose-700:hover {
+  background-color: var(--hud-alert) !important; color: #05070a !important;
+}
+.hover\:text-rose-400:hover, .hover\:text-rose-600:hover { color: var(--hud-alert) !important; }
+.hover\:border-rose-300:hover, .hover\:border-rose-400:hover { border-color: rgba(255, 59, 106, 0.5) !important; }
+
+.bg-emerald-50, .bg-emerald-50\/60, .bg-emerald-50\/80, .bg-emerald-200\/80, .bg-emerald-500\/10 {
+  background-color: var(--hud-lime-dim) !important;
+}
+.text-emerald-400, .text-emerald-600, .text-emerald-700, .text-emerald-800, .text-emerald-900, .text-emerald-950 {
+  color: var(--hud-lime) !important;
+}
+.border-emerald-200, .border-emerald-300, .border-emerald-500\/30 { border-color: rgba(198, 255, 0, 0.4) !important; }
+
+.bg-amber-100, .bg-amber-400 { background-color: var(--hud-amber-dim) !important; }
+.text-amber-300, .text-amber-400, .text-amber-400\/90, .text-amber-500, .text-amber-700, .text-amber-900, .text-amber-950 {
+  color: var(--hud-amber) !important;
+}
+.border-amber-200\/80, .border-amber-300, .border-amber-300\/80, .border-amber-500\/30 {
+  border-color: rgba(255, 184, 0, 0.4) !important;
+}
+.dark\:bg-amber-950\/80 { background-color: var(--hud-amber-dim) !important; }
+.dark\:text-amber-200 { color: var(--hud-amber) !important; }
+.dark\:border-amber-800 { border-color: rgba(255, 184, 0, 0.4) !important; }
+
+.bg-indigo-100 { background-color: rgba(124, 247, 255, 0.12) !important; }
+.text-indigo-400, .text-indigo-700, .text-indigo-900 { color: var(--hud-violet) !important; }
+.border-indigo-300 { border-color: rgba(124, 247, 255, 0.4) !important; }
+.hover\:bg-indigo-200:hover { background-color: rgba(124, 247, 255, 0.18) !important; }
+
+/* Primary "black" CTA buttons (bg-stone-900 text-white) read as HUD console
+   buttons with a glowing cyan hairline instead of flat charcoal */
+button.bg-stone-900,
+button.bg-stone-950 {
+  border: 1px solid rgba(var(--hud-cyan-rgb), 0.4);
+  box-shadow: 0 0 16px -6px rgba(var(--hud-cyan-rgb), 0.6);
+}
+button.bg-stone-900:hover,
+button.bg-stone-950:hover {
+  box-shadow: 0 0 22px -4px rgba(var(--hud-cyan-rgb), 0.85);
+}
+
+/* selection tint used on the App root (selection:bg-stone-900) */
+.selection\:bg-stone-900 ::selection {
+  background-color: var(--hud-cyan);
+  color: #05070a;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(var(--hud-cyan-rgb), 0.35);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--hud-cyan-rgb), 0.55);
+}
+
+/* ==========================================================================
+   Accent hue slider (Options menu)
+   ========================================================================== */
+.hud-hue-slider {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 10px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    hsl(0, 100%, 50%),
+    hsl(60, 100%, 50%),
+    hsl(120, 100%, 50%),
+    hsl(180, 100%, 50%),
+    hsl(240, 100%, 50%),
+    hsl(300, 100%, 50%),
+    hsl(360, 100%, 50%)
+  );
+  outline: none;
+  cursor: pointer;
+}
+.hud-hue-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: var(--hud-cyan);
+  border: 3px solid #05070a;
+  box-shadow: 0 0 0 1px rgba(var(--hud-cyan-rgb), 0.6), 0 0 12px -1px rgba(var(--hud-cyan-rgb), 0.8);
+}
+.hud-hue-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: var(--hud-cyan);
+  border: 3px solid #05070a;
+  box-shadow: 0 0 0 1px rgba(var(--hud-cyan-rgb), 0.6), 0 0 12px -1px rgba(var(--hud-cyan-rgb), 0.8);
+}
