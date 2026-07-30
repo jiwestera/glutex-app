@@ -80,7 +80,7 @@ export const HudSelect: React.FC<HudSelectProps> = ({
 
       {isOpen && (
         <div
-          className={`absolute z-30 mt-1.5 left-0 right-0 max-h-64 overflow-y-auto bg-white border border-stone-200 rounded-xl shadow-lg p-1.5 space-y-0.5 ${panelClassName}`}
+          className={`absolute z-30 mt-1.5 left-0 right-0 max-h-64 overflow-y-auto bg-white hud-modal-solid border border-stone-200 rounded-xl shadow-lg p-1.5 space-y-0.5 ${panelClassName}`}
         >
           {groups.map((group, gIdx) => (
             <div key={gIdx}>
