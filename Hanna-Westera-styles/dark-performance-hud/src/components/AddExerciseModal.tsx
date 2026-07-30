@@ -37,7 +37,7 @@ export const AddExerciseModal: React.FC<AddExerciseModalProps> = ({
   const [restSeconds, setRestSeconds] = useState<number>(90);
   const [notes, setNotes] = useState<string>('');
 
-  const bodyGroups = ['All', 'Glutes', 'Legs', 'Chest', 'Back', 'Arms', 'Full Body'];
+  const bodyGroups = ['All', 'Glutes', 'Legs', 'Chest', 'Back', 'Arms', 'Core', 'Full Body'];
   const equipmentTypes = ['All', 'Barbell', 'Dumbbell', 'Cable', 'Machine', 'Bodyweight', 'Smith Machine', 'Kettlebell'];
 
   const handleToggleHide = (exId: string, e: React.MouseEvent) => {
@@ -70,6 +70,8 @@ export const AddExerciseModal: React.FC<AddExerciseModalProps> = ({
           if (ex.bodyGroup !== 'Back' && !ex.targetRegion.includes('Back')) return false;
         } else if (bg === 'Arms') {
           if (ex.bodyGroup !== 'Arms' && !ex.targetRegion.includes('Arm') && !ex.targetRegion.includes('Shoulder')) return false;
+        } else if (bg === 'Core') {
+          if (ex.bodyGroup !== 'Core' && !ex.targetRegion.includes('Abs') && !ex.targetRegion.includes('Core')) return false;
         } else if (bg === 'Full Body') {
           if (ex.bodyGroup !== 'Full Body' && !ex.targetRegion.includes('Full Body')) return false;
         }

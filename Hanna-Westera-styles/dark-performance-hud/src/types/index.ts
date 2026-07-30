@@ -13,18 +13,19 @@ export type TargetRegion =
 
 export type GluteRegion = TargetRegion;
 
-export type BodyGroup = 'Glutes' | 'Legs' | 'Upper Body' | 'Chest' | 'Back' | 'Arms' | 'Full Body';
+export type BodyGroup = 'Glutes' | 'Legs' | 'Upper Body' | 'Chest' | 'Back' | 'Arms' | 'Core' | 'Full Body';
 
-export type ExerciseCategory = 
-  | 'Compound Heavy' 
-  | 'Stretch Focus' 
-  | 'Shortened Peak' 
-  | 'Abduction & Upper Shelf' 
+export type ExerciseCategory =
+  | 'Compound Heavy'
+  | 'Stretch Focus'
+  | 'Shortened Peak'
+  | 'Abduction & Upper Shelf'
   | 'Mobility & Activation'
   | 'Upper Push'
   | 'Upper Pull'
   | 'Arms & Shoulders'
   | 'Legs Isolation'
+  | 'Core & Stability'
   | 'Full Body Conditioning';
 
 export type EquipmentType = 

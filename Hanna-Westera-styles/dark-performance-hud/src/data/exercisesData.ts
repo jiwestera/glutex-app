@@ -1243,9 +1243,9 @@ export const exercisesData: Exercise[] = [
   {
     id: 'hanging-leg-raise',
     name: 'Hanging Knee / Leg Raise',
-    category: 'Full Body Conditioning',
-    targetRegion: 'Full Body',
-    bodyGroup: 'Full Body',
+    category: 'Core & Stability',
+    targetRegion: 'Abs & Core',
+    bodyGroup: 'Core',
     equipment: 'Bodyweight',
     description: 'Powerful abdominal & hip flexor exercise focusing on pelvic tilt and lower abs.',
     setupInstructions: [
@@ -1265,9 +1265,9 @@ export const exercisesData: Exercise[] = [
   {
     id: 'cable-ab-crunch',
     name: 'Kneeling Cable Ab Crunch',
-    category: 'Full Body Conditioning',
-    targetRegion: 'Full Body',
-    bodyGroup: 'Full Body',
+    category: 'Core & Stability',
+    targetRegion: 'Abs & Core',
+    bodyGroup: 'Core',
     equipment: 'Cable',
     description: 'Direct progressive overload exercise for rectus abdominis using constant cable tension.',
     setupInstructions: [
@@ -1281,6 +1281,116 @@ export const exercisesData: Exercise[] = [
     commonMistakes: [
       'Sitting back onto heels instead of flexing spine.',
       'Pulling rope down with arm power.'
+    ],
+    biomechanicsType: 'Isolation',
+    difficulty: 'Beginner'
+  },
+  {
+    id: 'plank-hold',
+    name: 'Plank Hold',
+    category: 'Core & Stability',
+    targetRegion: 'Abs & Core',
+    bodyGroup: 'Core',
+    equipment: 'Bodyweight',
+    description: 'Isometric anti-extension exercise building deep core bracing and total-body midline stability.',
+    setupInstructions: [
+      'Forearms and toes on the floor, elbows stacked under shoulders, body in one straight line.'
+    ],
+    techniqueCues: [
+      'Brace abs and glutes hard, keep hips level with the shoulders.',
+      'Breathe steadily without letting hips sag or pike.'
+    ],
+    commonMistakes: [
+      'Letting hips sag toward the floor.',
+      'Piking hips up to relieve core tension.'
+    ],
+    biomechanicsType: 'Activation',
+    difficulty: 'Beginner'
+  },
+  {
+    id: 'dead-bug',
+    name: 'Dead Bug',
+    category: 'Core & Stability',
+    targetRegion: 'Abs & Core',
+    bodyGroup: 'Core',
+    equipment: 'Bodyweight',
+    description: 'Anti-extension core control drill that trains the abs to resist lower back arching during limb movement.',
+    setupInstructions: [
+      'Lie on back, arms reaching straight up, knees bent 90° over the hips.'
+    ],
+    techniqueCues: [
+      'Press the low back flat into the floor throughout.',
+      'Slowly extend the opposite arm and leg without letting the back arch.'
+    ],
+    commonMistakes: [
+      'Letting the lower back lift off the floor.',
+      'Moving too fast and losing control.'
+    ],
+    biomechanicsType: 'Activation',
+    difficulty: 'Beginner'
+  },
+  {
+    id: 'weighted-decline-situp',
+    name: 'Weighted Decline Sit-Up',
+    category: 'Core & Stability',
+    targetRegion: 'Abs & Core',
+    bodyGroup: 'Core',
+    equipment: 'Dumbbell',
+    description: 'Loaded spinal flexion movement on a decline bench for progressive overload of the rectus abdominis.',
+    setupInstructions: [
+      'Secure feet on a decline bench, hold a dumbbell at the chest with both hands.'
+    ],
+    techniqueCues: [
+      'Curl the spine up vertebra by vertebra rather than yanking through the hips.',
+      'Lower back down under control to a full stretch.'
+    ],
+    commonMistakes: [
+      'Using hip flexors to fling the torso up.',
+      'Pulling on the neck with the arms.'
+    ],
+    biomechanicsType: 'Compound',
+    difficulty: 'Intermediate'
+  },
+  {
+    id: 'cable-woodchop',
+    name: 'Cable Woodchop',
+    category: 'Core & Stability',
+    targetRegion: 'Abs & Core',
+    bodyGroup: 'Core',
+    equipment: 'Cable',
+    description: 'Rotational core exercise training the obliques to control force through a diagonal chop pattern.',
+    setupInstructions: [
+      'Set the cable at a high position, stand side-on to the stack holding the handle with both hands.'
+    ],
+    techniqueCues: [
+      'Rotate through the torso and hips, pulling the handle down and across the body.',
+      'Keep arms relatively straight and let the core drive the motion.'
+    ],
+    commonMistakes: [
+      'Only moving the arms instead of rotating the torso.',
+      'Using momentum instead of controlled rotation.'
+    ],
+    biomechanicsType: 'Isolation',
+    difficulty: 'Intermediate'
+  },
+  {
+    id: 'kettlebell-russian-twist',
+    name: 'Kettlebell Russian Twist',
+    category: 'Core & Stability',
+    targetRegion: 'Abs & Core',
+    bodyGroup: 'Core',
+    equipment: 'Kettlebell',
+    description: 'Seated rotational movement targeting the obliques through controlled side-to-side torso rotation.',
+    setupInstructions: [
+      'Sit with knees bent, torso leaned back roughly 45°, holding a kettlebell at the chest.'
+    ],
+    techniqueCues: [
+      'Rotate the torso to tap the kettlebell on the floor beside each hip.',
+      'Keep the chest up and move from the ribcage, not just the arms.'
+    ],
+    commonMistakes: [
+      'Rounding the lower back excessively.',
+      'Rushing reps and losing rotational control.'
     ],
     biomechanicsType: 'Isolation',
     difficulty: 'Beginner'

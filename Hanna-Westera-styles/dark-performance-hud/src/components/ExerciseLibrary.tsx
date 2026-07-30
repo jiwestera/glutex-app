@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Search, Filter, Info, Dumbbell, Shield, Sparkles, Plus, Eye, EyeOff } from 'lucide-react';
+import { Search, Filter, Info, Dumbbell, Shield, Sparkles, Plus, Eye, EyeOff, Pencil, Trash2 } from 'lucide-react';
 import { Exercise, GluteRegion, EquipmentType, ExerciseCategory } from '../types';
-import { getAllExercises, saveCustomExercise, getHiddenExerciseIds, hideExercise, unhideExercise } from '../utils/exerciseUtils';
+import { getAllExercises, saveCustomExercise, deleteCustomExercise, getHiddenExerciseIds, hideExercise, unhideExercise } from '../utils/exerciseUtils';
 import { CreateExerciseModal } from './CreateExerciseModal';
 import { InfoBall } from './InfoBall';
 import { HudSelect } from './HudSelect';
+import { ConfirmModal } from './ConfirmModal';
 
 export const ExerciseLibrary: React.FC = () => {
   const [exercisesList, setExercisesList] = useState<Exercise[]>(() => getAllExercises());
@@ -17,6 +18,8 @@ export const ExerciseLibrary: React.FC = () => {
   const [selectedBiomechanics, setSelectedBiomechanics] = useState<string>('All');
   const [selectedEquipment, setSelectedEquipment] = useState<string>('All');
   const [isCreatingCustom, setIsCreatingCustom] = useState<boolean>(false);
+  const [exerciseToEdit, setExerciseToEdit] = useState<Exercise | null>(null);
+  const [exerciseToDelete, setExerciseToDelete] = useState<Exercise | null>(null);
 
   const [activeModalExercise, setActiveModalExercise] = useState<Exercise | null>(null);
 
@@ -49,7 +52,16 @@ export const ExerciseLibrary: React.FC = () => {
   const handleSaveCustomExercise = (newEx: Exercise) => {
     saveCustomExercise(newEx);
     setExercisesList(getAllExercises());
+    setExerciseToEdit(null);
     setActiveModalExercise(newEx);
+  };
+
+  const handleConfirmDeleteCustomExercise = () => {
+    if (!exerciseToDelete) return;
+    deleteCustomExercise(exerciseToDelete.id);
+    setExercisesList(getAllExercises());
+    if (activeModalExercise?.id === exerciseToDelete.id) setActiveModalExercise(null);
+    setExerciseToDelete(null);
   };
 
 
@@ -107,6 +119,7 @@ export const ExerciseLibrary: React.FC = () => {
                 { value: 'Chest', label: 'Chest', group: 'Body Groups' },
                 { value: 'Back & Lats', label: 'Back & Lats', group: 'Body Groups' },
                 { value: 'Shoulders & Arms', label: 'Arms & Shoulders', group: 'Body Groups' },
+                { value: 'Abs & Core', label: 'Abs & Core', group: 'Body Groups' },
                 { value: 'Full Body', label: 'Full Body', group: 'Body Groups' }
               ]}
             />
@@ -129,6 +142,7 @@ export const ExerciseLibrary: React.FC = () => {
                 { value: 'Upper Pull', label: 'Upper Pull' },
                 { value: 'Arms & Shoulders', label: 'Arms & Shoulders' },
                 { value: 'Legs Isolation', label: 'Legs Isolation' },
+                { value: 'Core & Stability', label: 'Core & Stability' },
                 { value: 'Full Body Conditioning', label: 'Full Body Conditioning' }
               ]}
             />
@@ -162,7 +176,10 @@ export const ExerciseLibrary: React.FC = () => {
                 { value: 'Dumbbell', label: 'Dumbbell' },
                 { value: 'Cable', label: 'Cable' },
                 { value: 'Machine', label: 'Machine' },
-                { value: 'Resistance Band', label: 'Resistance Band' }
+                { value: 'Smith Machine', label: 'Smith Machine' },
+                { value: 'Resistance Band', label: 'Resistance Band' },
+                { value: 'Bodyweight', label: 'Bodyweight' },
+                { value: 'Kettlebell', label: 'Kettlebell' }
               ]}
             />
           </div>
@@ -195,6 +212,7 @@ export const ExerciseLibrary: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredExercises.map((ex) => {
           const isHidden = hiddenIds.includes(ex.id);
+          const isCustom = ex.id.startsWith('custom-');
           return (
             <div
               key={ex.id}
@@ -222,8 +240,32 @@ export const ExerciseLibrary: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="flex items-center space-x-2">
-                    <span className="text-[10px] text-stone-400 font-medium uppercase tracking-wider">{ex.equipment}</span>
+                  <div className="flex items-center space-x-1">
+                    <span className="text-[10px] text-stone-400 font-medium uppercase tracking-wider mr-1">{ex.equipment}</span>
+                    {isCustom && (
+                      <>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExerciseToEdit(ex);
+                          }}
+                          className="p-1.5 rounded-full text-stone-300 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+                          title="Edit custom exercise"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExerciseToDelete(ex);
+                          }}
+                          className="p-1.5 rounded-full text-stone-300 hover:text-rose-700 hover:bg-rose-100 transition-colors"
+                          title="Delete custom exercise"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
                     <button
                       onClick={(e) => handleToggleHide(ex.id, e)}
                       className={`p-1.5 rounded-full transition-colors ${
@@ -323,11 +365,31 @@ export const ExerciseLibrary: React.FC = () => {
         </div>
       )}
 
-      {/* Custom Exercise Modal */}
+      {/* Custom Exercise Modal (create) */}
       {isCreatingCustom && (
         <CreateExerciseModal
           onSave={handleSaveCustomExercise}
           onClose={() => setIsCreatingCustom(false)}
+        />
+      )}
+
+      {/* Custom Exercise Modal (edit) */}
+      {exerciseToEdit && (
+        <CreateExerciseModal
+          existingExercise={exerciseToEdit}
+          onSave={handleSaveCustomExercise}
+          onClose={() => setExerciseToEdit(null)}
+        />
+      )}
+
+      {/* Delete Custom Exercise Confirmation */}
+      {exerciseToDelete && (
+        <ConfirmModal
+          title="Delete custom exercise?"
+          message={`"${exerciseToDelete.name}" will be permanently removed from your library. This can't be undone.`}
+          confirmLabel="Delete"
+          onConfirm={handleConfirmDeleteCustomExercise}
+          onCancel={() => setExerciseToDelete(null)}
         />
       )}
     </div>

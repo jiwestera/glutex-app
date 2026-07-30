@@ -26,6 +26,18 @@ export const saveCustomExercise = (newExercise: Exercise): Exercise[] => {
   }
 };
 
+export const deleteCustomExercise = (id: string): Exercise[] => {
+  try {
+    const current = getCustomExercises();
+    const updated = current.filter((e) => e.id !== id);
+    localStorage.setItem(CUSTOM_EXERCISES_KEY, JSON.stringify(updated));
+    return updated;
+  } catch (err) {
+    console.error('Failed to delete custom exercise:', err);
+    return getCustomExercises();
+  }
+};
+
 export const getHiddenExerciseIds = (): string[] => {
   try {
     const saved = localStorage.getItem(HIDDEN_EXERCISES_KEY);

@@ -7,23 +7,27 @@ interface CreateExerciseModalProps {
   onSave: (newExercise: Exercise) => void;
   onClose: () => void;
   initialBodyGroup?: string;
+  existingExercise?: Exercise;
 }
 
 export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
   onSave,
   onClose,
-  initialBodyGroup
+  initialBodyGroup,
+  existingExercise
 }) => {
-  const [name, setName] = useState('');
-  const [bodyGroup, setBodyGroup] = useState<string>(initialBodyGroup || '-');
-  const [targetRegion, setTargetRegion] = useState<string>('-');
-  const [equipment, setEquipment] = useState<string>('-');
-  const [category, setCategory] = useState<string>('-');
-  const [biomechanicsType, setBiomechanicsType] = useState<string>('-');
-  const [difficulty, setDifficulty] = useState<string>('-');
-  const [description, setDescription] = useState('');
-  const [setupInstruction, setSetupInstruction] = useState('');
-  const [techniqueCue, setTechniqueCue] = useState('');
+  const isEditing = !!existingExercise;
+
+  const [name, setName] = useState(existingExercise?.name || '');
+  const [bodyGroup, setBodyGroup] = useState<string>(existingExercise?.bodyGroup || initialBodyGroup || '-');
+  const [targetRegion, setTargetRegion] = useState<string>(existingExercise?.targetRegion || '-');
+  const [equipment, setEquipment] = useState<string>(existingExercise?.equipment || '-');
+  const [category, setCategory] = useState<string>(existingExercise?.category || '-');
+  const [biomechanicsType, setBiomechanicsType] = useState<string>(existingExercise?.biomechanicsType || '-');
+  const [difficulty, setDifficulty] = useState<string>(existingExercise?.difficulty || '-');
+  const [description, setDescription] = useState(existingExercise?.description || '');
+  const [setupInstruction, setSetupInstruction] = useState(existingExercise?.setupInstructions?.[0] || '');
+  const [techniqueCue, setTechniqueCue] = useState(existingExercise?.techniqueCues?.[0] || '');
   const [error, setError] = useState('');
 
   const targetRegionOptions = [
@@ -36,6 +40,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
     'Chest',
     'Back & Lats',
     'Shoulders & Arms',
+    'Abs & Core',
     'Full Body'
   ];
 
@@ -47,7 +52,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
     }
 
     const newExercise: Exercise = {
-      id: `custom-${Date.now()}-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+      id: existingExercise?.id || `custom-${Date.now()}-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
       name: name.trim(),
       category: (category as ExerciseCategory) || ('-' as any),
       targetRegion: targetRegion.trim() || '-',
@@ -56,7 +61,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
       description: description.trim() || 'Custom user-created exercise.',
       setupInstructions: setupInstruction.trim() ? [setupInstruction.trim()] : ['Set up comfortably with proper form.'],
       techniqueCues: techniqueCue.trim() ? [techniqueCue.trim()] : ['Maintain controlled movement and mind-muscle connection.'],
-      commonMistakes: ['Rushing reps without controlled tempo.'],
+      commonMistakes: existingExercise?.commonMistakes || ['Rushing reps without controlled tempo.'],
       biomechanicsType: (biomechanicsType as Exercise['biomechanicsType']) || ('-' as any),
       difficulty: (difficulty as Exercise['difficulty']) || ('-' as any)
     };
@@ -76,10 +81,12 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
               <span>Custom Exercise Creator</span>
             </div>
             <h2 className="text-2xl font-light text-stone-950 tracking-tight">
-              Add New Custom Exercise
+              {isEditing ? 'Edit Custom Exercise' : 'Add New Custom Exercise'}
             </h2>
             <p className="text-xs text-stone-500">
-              Save a custom movement to your personal library for routines & logs.
+              {isEditing
+                ? 'Update this movement in your personal library.'
+                : 'Save a custom movement to your personal library for routines & logs.'}
             </p>
           </div>
 
@@ -135,6 +142,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
                   { value: 'Chest', label: 'Chest' },
                   { value: 'Back', label: 'Back' },
                   { value: 'Arms', label: 'Arms & Shoulders' },
+                  { value: 'Core', label: 'Core' },
                   { value: 'Full Body', label: 'Full Body' }
                 ]}
               />
@@ -199,6 +207,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
                   { value: 'Upper Pull', label: 'Upper Pull' },
                   { value: 'Arms & Shoulders', label: 'Arms & Shoulders' },
                   { value: 'Legs Isolation', label: 'Legs Isolation' },
+                  { value: 'Core & Stability', label: 'Core & Stability' },
                   { value: 'Full Body Conditioning', label: 'Full Body Conditioning' }
                 ]}
               />
@@ -289,7 +298,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
               className="px-6 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider text-white bg-stone-900 hover:bg-stone-800 transition-all shadow-md flex items-center space-x-2"
             >
               <Plus className="w-4 h-4" />
-              <span>Save Custom Exercise</span>
+              <span>{isEditing ? 'Save Changes' : 'Save Custom Exercise'}</span>
             </button>
           </div>
         </form>

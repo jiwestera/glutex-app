@@ -41,7 +41,9 @@
       "Bash(git commit -m ' *)",
       "Bash(ipconfig)",
       "PowerShell($env:Path = \"C:\\\\Users\\\\jiwes\\\\AppData\\\\Local\\\\NodeJS\\\\node-v24.18.0-win-x64;$env:Path\"; cd \"C:\\\\Users\\\\jiwes\\\\OneDrive\\\\Documenten\\\\Projects\\\\Hanna-Westera-styles\\\\dark-performance-hud\"; npm run lint 2>&1 | Select-Object -Last 30)",
-      "Bash(git check-ignore *)"
+      "Bash(git check-ignore *)",
+      "Bash(git push *)",
+      "PowerShell($env:Path = \"C:\\\\Users\\\\jiwes\\\\AppData\\\\Local\\\\NodeJS\\\\node-v24.18.0-win-x64;$env:Path\"; cd \"C:\\\\Users\\\\jiwes\\\\OneDrive\\\\Documenten\\\\Projects\\\\Hanna-Westera-styles\\\\dark-performance-hud\"; npm run lint 2>&1 | Select-Object -Last 60)"
     ]
   }
 }
