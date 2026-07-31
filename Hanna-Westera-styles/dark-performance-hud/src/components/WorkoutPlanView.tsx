@@ -297,7 +297,7 @@ export const WorkoutPlanView: React.FC<WorkoutPlanViewProps> = ({
                   }`}
                 >
                   <div className="flex items-center justify-between w-full gap-1">
-                    <span className={`text-xs font-bold font-mono ${isSelected ? 'text-white dark:text-stone-950' : 'text-stone-900 dark:text-stone-100'}`}>
+                    <span className={`text-xs font-bold font-mono ${isSelected ? 'glow-text-cyan' : 'text-stone-900 dark:text-stone-100'}`}>
                       Day {day.dayNumber}
                     </span>
                     {isExtraDay && (
