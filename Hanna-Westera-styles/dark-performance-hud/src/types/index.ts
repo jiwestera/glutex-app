@@ -52,6 +52,7 @@ export interface Exercise {
   commonMistakes: string[];
   biomechanicsType: 'Shortened Position' | 'Stretch Position' | 'Mid-Range' | 'Abduction' | 'Activation' | 'Push/Pull' | 'Isolation' | 'Compound';
   difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
+  defaultRestSeconds?: number;
 }
 
 export interface PlannedExercise {

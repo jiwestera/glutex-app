@@ -203,50 +203,25 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ logs, unit, on
                     </div>
                   </div>
 
-                  {/* Inline Sets Breakdown */}
+                  {/* Quick View: exercise names only, no set detail */}
                   {isExpanded && (
-                    <div className="space-y-3 pt-3 border-t border-stone-200/60 animate-fadeIn">
+                    <div className="flex flex-wrap gap-2 pt-3 border-t border-stone-200/60 animate-fadeIn">
                       {log.exercises.map((e, idx) => {
-                        const completedSets = e.sets.filter((s) => s.completed || s.weightKg > 0);
                         const matchedLibraryEx = allExercises.find(
                           (libEx) => libEx.id === e.exerciseId || libEx.name.toLowerCase() === e.exerciseName.toLowerCase()
                         );
 
                         return (
-                          <div key={idx} className="bg-white p-3.5 rounded-xl border border-stone-200/80 space-y-2">
-                            <div className="flex items-center justify-between text-xs">
-                              <div className="flex items-center space-x-2">
-                                <span className="font-semibold text-stone-900">{e.exerciseName}</span>
-                                {matchedLibraryEx && (
-                                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-stone-100 text-stone-600 border border-stone-200">
-                                    {matchedLibraryEx.equipment}
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-stone-500 text-[11px]">
-                                {e.sets.length} sets ({completedSets.length} completed)
+                          <div
+                            key={idx}
+                            className="bg-white px-3 py-1.5 rounded-full border border-stone-200/80 text-xs font-medium text-stone-800 flex items-center space-x-1.5"
+                          >
+                            <span>{e.exerciseName}</span>
+                            {matchedLibraryEx && (
+                              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-stone-100 text-stone-500 border border-stone-200">
+                                {matchedLibraryEx.equipment}
                               </span>
-                            </div>
-
-                            {/* Individual sets list */}
-                            <div className="flex flex-wrap gap-2 pt-1">
-                              {e.sets.map((s, sIdx) => (
-                                <div
-                                  key={sIdx}
-                                  className={`border px-2.5 py-1 rounded-lg text-[11px] font-medium flex items-center space-x-1.5 ${
-                                    s.completed
-                                      ? 'bg-emerald-50/80 border-emerald-200 text-emerald-950'
-                                      : 'bg-stone-50 border-stone-200 text-stone-600'
-                                  }`}
-                                >
-                                  <span className="font-bold text-stone-500 font-mono">Set {s.setNumber}:</span>
-                                  <span className="font-mono">
-                                    {s.weightKg > 0 ? `${s.weightKg} ${unit}` : 'Bodyweight'} × {s.reps} reps
-                                  </span>
-                                  {s.completed && <CheckCircle2 className="w-3 h-3 text-emerald-600 inline" />}
-                                </div>
-                              ))}
-                            </div>
+                            )}
                           </div>
                         );
                       })}
@@ -320,7 +295,7 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ logs, unit, on
                 <div className="bg-white p-3.5 rounded-2xl border border-stone-200/80 space-y-0.5">
                   <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Rating</span>
                   <span className="text-base font-mono font-semibold text-rose-700">
-                    {selectedLogForModal.feelingRating ? `${selectedLogForModal.feelingRating} / 10` : 'Not rated'}
+                    {selectedLogForModal.feelingRating ? `${selectedLogForModal.feelingRating} / 5` : 'Not rated'}
                   </span>
                 </div>
               </div>

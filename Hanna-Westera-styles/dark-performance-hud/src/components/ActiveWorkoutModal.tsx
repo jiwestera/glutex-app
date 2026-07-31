@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Check, Clock, Plus, Trash2, Award, ArrowLeft, Volume2, VolumeX, Flame, RefreshCw, RotateCcw } from 'lucide-react';
 import { WorkoutDay, LoggedExercise, LoggedSet, WorkoutLog, UnitSystem, PlannedExercise } from '../types';
 import { getAllExercises, getLastLoggedForExercise, saveExerciseMemory } from '../utils/exerciseUtils';
+import { playRestSound } from '../utils/restSound';
 import { ExerciseSwapModal } from './ExerciseSwapModal';
 import { AddExerciseModal } from './AddExerciseModal';
 import { ConfirmModal } from './ConfirmModal';
@@ -111,18 +112,8 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
       }, 1000);
     } else if (restTimerSeconds === 0 && restTimerActive) {
       setRestTimerActive(false);
-      if (soundEnabled && 'Notification' in window) {
-        try {
-          const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-          const osc = audioCtx.createOscillator();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
-          osc.connect(audioCtx.destination);
-          osc.start();
-          osc.stop(audioCtx.currentTime + 0.3);
-        } catch (e) {
-          // Fallback if audio context disabled
-        }
+      if (soundEnabled) {
+        playRestSound();
       }
     }
     return () => clearInterval(interval);

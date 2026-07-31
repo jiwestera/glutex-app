@@ -16,11 +16,13 @@ import {
   MapPin,
   SlidersHorizontal,
   RotateCcw,
-  Palette
+  Palette,
+  Volume2
 } from 'lucide-react';
 import { UnitSystem } from '../types';
 import { LocationPreset } from '../utils/exerciseUtils';
 import { HUD_ACCENT_PRESETS, hueToHex } from '../utils/hudTheme';
+import { RestSoundType, getRestSoundSettings, saveRestSoundSettings, playRestSound } from '../utils/restSound';
 
 export type DarkModePreference = 'auto' | 'dark' | 'light';
 
@@ -67,6 +69,14 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+  const [restSound, setRestSound] = useState(() => getRestSoundSettings());
+
+  const updateRestSound = (partial: Partial<{ type: RestSoundType; volume: number }>) => {
+    const updated = { ...restSound, ...partial };
+    setRestSound(updated);
+    saveRestSoundSettings(updated);
+    playRestSound(updated);
+  };
 
   const actualDays = totalDays ?? daysPerWeek;
   const extraDays = actualDays - daysPerWeek;
@@ -436,6 +446,55 @@ export const Header: React.FC<HeaderProps> = ({
                     {num} Days
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Section 4.5: Rest Timer Sound */}
+            <div className="space-y-3 pt-2 border-t border-stone-100">
+              <label className="text-xs font-bold text-stone-400 uppercase tracking-widest flex items-center space-x-2">
+                <Volume2 className="w-3.5 h-3.5 text-stone-700" />
+                <span>Rest Timer Sound</span>
+              </label>
+
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: 'chime' as RestSoundType, label: 'Soft Chime' },
+                  { id: 'beep' as RestSoundType, label: 'Classic Beep' },
+                  { id: 'double-beep' as RestSoundType, label: 'Double Beep' }
+                ].map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => updateRestSound({ type: opt.id })}
+                    className={`py-2.5 px-2 rounded-2xl border text-[11px] font-medium transition-all cursor-pointer text-center ${
+                      restSound.type === opt.id
+                        ? 'border-stone-900 bg-stone-900 text-white font-semibold shadow-xs'
+                        : 'border-stone-200 bg-stone-50 hover:bg-stone-100 text-stone-700'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-[11px] text-stone-500 font-medium">
+                  <span>Intensity</span>
+                  <span className="font-mono text-stone-700">{restSound.volume}%</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={restSound.volume}
+                  onChange={(e) => setRestSound((prev) => ({ ...prev, volume: parseInt(e.target.value) }))}
+                  onMouseUp={(e) => updateRestSound({ volume: parseInt((e.target as HTMLInputElement).value) })}
+                  onTouchEnd={(e) => updateRestSound({ volume: parseInt((e.target as HTMLInputElement).value) })}
+                  className="hud-volume-slider"
+                />
+                <p className="text-[11px] text-stone-500 leading-snug">
+                  Plays when a rest timer finishes during a workout. Tap a sound to preview it.
+                </p>
               </div>
             </div>
 

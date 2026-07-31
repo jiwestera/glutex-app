@@ -1260,7 +1260,8 @@ export const exercisesData: Exercise[] = [
       'Arching lower back on descent.'
     ],
     biomechanicsType: 'Compound',
-    difficulty: 'Intermediate'
+    difficulty: 'Intermediate',
+    defaultRestSeconds: 60
   },
   {
     id: 'cable-ab-crunch',
@@ -1283,7 +1284,8 @@ export const exercisesData: Exercise[] = [
       'Pulling rope down with arm power.'
     ],
     biomechanicsType: 'Isolation',
-    difficulty: 'Beginner'
+    difficulty: 'Beginner',
+    defaultRestSeconds: 45
   },
   {
     id: 'plank-hold',
@@ -1305,7 +1307,8 @@ export const exercisesData: Exercise[] = [
       'Piking hips up to relieve core tension.'
     ],
     biomechanicsType: 'Activation',
-    difficulty: 'Beginner'
+    difficulty: 'Beginner',
+    defaultRestSeconds: 30
   },
   {
     id: 'dead-bug',
@@ -1327,7 +1330,31 @@ export const exercisesData: Exercise[] = [
       'Moving too fast and losing control.'
     ],
     biomechanicsType: 'Activation',
-    difficulty: 'Beginner'
+    difficulty: 'Beginner',
+    defaultRestSeconds: 30
+  },
+  {
+    id: 'bodyweight-situp',
+    name: 'Bodyweight Sit-Up',
+    category: 'Core & Stability',
+    targetRegion: 'Abs & Core',
+    bodyGroup: 'Core',
+    equipment: 'Bodyweight',
+    description: 'Classic spinal flexion movement building baseline abdominal strength and endurance with no equipment.',
+    setupInstructions: [
+      'Lie on back with knees bent, feet flat on the floor, hands lightly behind the head or crossed on the chest.'
+    ],
+    techniqueCues: [
+      'Curl the spine up and forward until the torso is upright.',
+      'Lower back down under control instead of dropping.'
+    ],
+    commonMistakes: [
+      'Yanking on the neck with the hands.',
+      'Using momentum to swing up instead of controlled abdominal flexion.'
+    ],
+    biomechanicsType: 'Compound',
+    difficulty: 'Beginner',
+    defaultRestSeconds: 45
   },
   {
     id: 'weighted-decline-situp',
@@ -1349,7 +1376,8 @@ export const exercisesData: Exercise[] = [
       'Pulling on the neck with the arms.'
     ],
     biomechanicsType: 'Compound',
-    difficulty: 'Intermediate'
+    difficulty: 'Intermediate',
+    defaultRestSeconds: 60
   },
   {
     id: 'cable-woodchop',
@@ -1371,7 +1399,8 @@ export const exercisesData: Exercise[] = [
       'Using momentum instead of controlled rotation.'
     ],
     biomechanicsType: 'Isolation',
-    difficulty: 'Intermediate'
+    difficulty: 'Intermediate',
+    defaultRestSeconds: 45
   },
   {
     id: 'kettlebell-russian-twist',
@@ -1393,7 +1422,8 @@ export const exercisesData: Exercise[] = [
       'Rushing reps and losing rotational control.'
     ],
     biomechanicsType: 'Isolation',
-    difficulty: 'Beginner'
+    difficulty: 'Beginner',
+    defaultRestSeconds: 45
   }
 ];
 

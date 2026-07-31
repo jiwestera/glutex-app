@@ -34,11 +34,16 @@ export const AddExerciseModal: React.FC<AddExerciseModalProps> = ({
   const [sets, setSets] = useState<number>(3);
   const [reps, setReps] = useState<string>('8-12');
   const [rpe, setRpe] = useState<string>('RPE 8');
-  const [restSeconds, setRestSeconds] = useState<number>(90);
+  const [restSeconds, setRestSeconds] = useState<number>(60);
   const [notes, setNotes] = useState<string>('');
 
   const bodyGroups = ['All', 'Glutes', 'Legs', 'Chest', 'Back', 'Arms', 'Core', 'Full Body'];
   const equipmentTypes = ['All', 'Barbell', 'Dumbbell', 'Cable', 'Machine', 'Bodyweight', 'Smith Machine', 'Kettlebell'];
+
+  const handleSelectExercise = (ex: Exercise) => {
+    setSelectedExercise(ex);
+    setRestSeconds(ex.defaultRestSeconds ?? 60);
+  };
 
   const handleToggleHide = (exId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -101,7 +106,7 @@ export const AddExerciseModal: React.FC<AddExerciseModalProps> = ({
     saveCustomExercise(newEx);
     const updated = getAllExercises();
     setAllExercisesList(updated);
-    setSelectedExercise(newEx);
+    handleSelectExercise(newEx);
   };
 
   const handleConfirmAdd = () => {
@@ -240,7 +245,7 @@ export const AddExerciseModal: React.FC<AddExerciseModalProps> = ({
                 return (
                   <div
                     key={ex.id}
-                    onClick={() => setSelectedExercise(ex)}
+                    onClick={() => handleSelectExercise(ex)}
                     className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-center justify-between gap-4 ${
                       isSelected
                         ? 'bg-stone-900 text-white border-stone-900 shadow-sm'

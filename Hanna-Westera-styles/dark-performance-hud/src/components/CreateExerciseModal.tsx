@@ -25,6 +25,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
   const [category, setCategory] = useState<string>(existingExercise?.category || '-');
   const [biomechanicsType, setBiomechanicsType] = useState<string>(existingExercise?.biomechanicsType || '-');
   const [difficulty, setDifficulty] = useState<string>(existingExercise?.difficulty || '-');
+  const [defaultRestSeconds, setDefaultRestSeconds] = useState<number>(existingExercise?.defaultRestSeconds ?? 60);
   const [description, setDescription] = useState(existingExercise?.description || '');
   const [setupInstruction, setSetupInstruction] = useState(existingExercise?.setupInstructions?.[0] || '');
   const [techniqueCue, setTechniqueCue] = useState(existingExercise?.techniqueCues?.[0] || '');
@@ -63,7 +64,8 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
       techniqueCues: techniqueCue.trim() ? [techniqueCue.trim()] : ['Maintain controlled movement and mind-muscle connection.'],
       commonMistakes: existingExercise?.commonMistakes || ['Rushing reps without controlled tempo.'],
       biomechanicsType: (biomechanicsType as Exercise['biomechanicsType']) || ('-' as any),
-      difficulty: (difficulty as Exercise['difficulty']) || ('-' as any)
+      difficulty: (difficulty as Exercise['difficulty']) || ('-' as any),
+      defaultRestSeconds: Math.max(0, defaultRestSeconds)
     };
 
     onSave(newExercise);
@@ -254,6 +256,25 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
                 ]}
               />
             </div>
+          </div>
+
+          {/* Default Rest Period */}
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 block mb-1">
+              Default Rest Period (seconds)
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="5"
+              value={defaultRestSeconds}
+              onChange={(e) => setDefaultRestSeconds(parseInt(e.target.value) || 0)}
+              placeholder="60"
+              className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:border-stone-400 font-mono font-medium"
+            />
+            <p className="text-[10px] text-stone-400 mt-1">
+              Used as the starting rest time whenever this exercise is added to a workout day.
+            </p>
           </div>
 
           {/* Description & Cues */}

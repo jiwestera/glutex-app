@@ -525,3 +525,35 @@ button.bg-stone-950:hover {
   border: 3px solid #05070a;
   box-shadow: 0 0 0 1px rgba(var(--hud-cyan-rgb), 0.6), 0 0 12px -1px rgba(var(--hud-cyan-rgb), 0.8);
 }
+
+/* ==========================================================================
+   Volume slider (Options menu — rest timer sound)
+   ========================================================================== */
+.hud-volume-slider {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 10px;
+  border-radius: 9999px;
+  background: rgba(var(--hud-cyan-rgb), 0.18);
+  outline: none;
+  cursor: pointer;
+}
+.hud-volume-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: var(--hud-cyan);
+  border: 3px solid #05070a;
+  box-shadow: 0 0 0 1px rgba(var(--hud-cyan-rgb), 0.6), 0 0 12px -1px rgba(var(--hud-cyan-rgb), 0.8);
+}
+.hud-volume-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: var(--hud-cyan);
+  border: 3px solid #05070a;
+  box-shadow: 0 0 0 1px rgba(var(--hud-cyan-rgb), 0.6), 0 0 12px -1px rgba(var(--hud-cyan-rgb), 0.8);
+}
