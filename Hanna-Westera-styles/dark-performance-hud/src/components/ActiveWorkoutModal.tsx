@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { App as CapacitorApp } from '@capacitor/app';
 import { Check, Clock, Plus, Trash2, Award, ArrowLeft, Volume2, VolumeX, Flame, RefreshCw, RotateCcw } from 'lucide-react';
 import { WorkoutDay, LoggedExercise, LoggedSet, WorkoutLog, UnitSystem, PlannedExercise } from '../types';
 import { getAllExercises, getLastLoggedForExercise, saveExerciseMemory } from '../utils/exerciseUtils';
@@ -150,6 +151,20 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
+  // Android's system back gesture/button bypasses all in-page UI and would
+  // otherwise close the app outright. Registering a listener here hands control
+  // to us instead of the OS default: show the exit-confirmation (or, if it's
+  // already open, treat a second back press as Cancel) rather than exiting.
+  // No-ops harmlessly on web, where this plugin has no native back gesture to hook.
+  useEffect(() => {
+    const listenerPromise = CapacitorApp.addListener('backButton', () => {
+      setShowExitConfirm((prev) => !prev);
+    });
+    return () => {
+      listenerPromise.then((handle) => handle.remove());
+    };
   }, []);
 
   const startRestTimer = (seconds: number) => {
