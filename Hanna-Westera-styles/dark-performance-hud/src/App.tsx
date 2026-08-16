@@ -14,6 +14,20 @@ import { WorkoutSplit, WorkoutLog, UnitSystem, PlannedExercise, MobilityRoutine 
 import { transformSplitForLocation, LocationPreset } from './utils/exerciseUtils';
 import { applyHudAccentHue, HUD_DEFAULT_HUE } from './utils/hudTheme';
 
+// Safely reads & parses a JSON value from localStorage. A future app update that
+// changes a data shape (or any storage corruption) must never crash the whole app
+// on load — fall back to the caller's default instead so the user's other data
+// (still sitting in localStorage) stays reachable.
+function loadJSON<T>(key: string, fallback: T): T {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? (JSON.parse(saved) as T) : fallback;
+  } catch (err) {
+    console.error(`Failed to load "${key}" from storage:`, err);
+    return fallback;
+  }
+}
+
 export default function App() {
   // Dark Mode preference: 'auto' | 'dark' | 'light'
   const [darkModePreference, setDarkModePreference] = useState<DarkModePreference>(() => {
@@ -109,22 +123,19 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>('workout');
 
   // Workout Logs state
-  const [workoutLogs, setWorkoutLogs] = useState<WorkoutLog[]>(() => {
-    const saved = localStorage.getItem('glute_app_logs');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [workoutLogs, setWorkoutLogs] = useState<WorkoutLog[]>(() =>
+    loadJSON<WorkoutLog[]>('glute_app_logs', [])
+  );
 
   // Custom Splits Overrides state
-  const [customSplits, setCustomSplits] = useState<Record<number, WorkoutSplit>>(() => {
-    const saved = localStorage.getItem('glute_app_custom_splits');
-    return saved ? JSON.parse(saved) : {};
-  });
+  const [customSplits, setCustomSplits] = useState<Record<number, WorkoutSplit>>(() =>
+    loadJSON<Record<number, WorkoutSplit>>('glute_app_custom_splits', {})
+  );
 
   // User Created Custom Frequency Splits state
-  const [userCreatedSplits, setUserCreatedSplits] = useState<WorkoutSplit[]>(() => {
-    const saved = localStorage.getItem('glute_app_user_created_splits');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [userCreatedSplits, setUserCreatedSplits] = useState<WorkoutSplit[]>(() =>
+    loadJSON<WorkoutSplit[]>('glute_app_user_created_splits', [])
+  );
 
   // Active Selected Split ID
   const [activeSplitId, setActiveSplitId] = useState<string>(() => {
@@ -132,10 +143,9 @@ export default function App() {
   });
 
   // Custom Warmup Routines state
-  const [customWarmups, setCustomWarmups] = useState<MobilityRoutine[]>(() => {
-    const saved = localStorage.getItem('glute_app_custom_warmups');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [customWarmups, setCustomWarmups] = useState<MobilityRoutine[]>(() =>
+    loadJSON<MobilityRoutine[]>('glute_app_custom_warmups', [])
+  );
 
   // Active Workout Day (if modal open)
   const [activeWorkoutDayNumber, setActiveWorkoutDayNumber] = useState<number | null>(null);
@@ -358,7 +368,7 @@ export default function App() {
         title: `Day ${newDayNum}: ${title}`,
         focus: focus || 'Non-Glute Focus / Custom Day',
         estimatedMinutes: 45,
-        warmupMobilityIds: ['m1', 'm3'],
+        warmupMobilityIds: ['pre-glute-activation'],
         exercises: []
       };
 

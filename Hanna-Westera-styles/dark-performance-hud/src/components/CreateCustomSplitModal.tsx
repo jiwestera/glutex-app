@@ -16,37 +16,37 @@ const DAY_FOCUS_PRESETS = [
     id: 'glute-max',
     name: 'Glute Max Heavy & Shortened Peak',
     focus: 'Barbell Hip Thrusts, Kas Glute Bridge & Heavy Peak Tension',
-    exerciseIds: ['ex1', 'ex2', 'ex5', 'ex11'] // Hip Thrust, Kas Bridge, Sumo Squat, Cable Kickback
+    exerciseIds: ['barbell-hip-thrust', 'kas-glute-bridge', 'dumbbell-sumo-squat', 'cable-glute-kickback']
   },
   {
     id: 'glute-medius',
     name: 'Glute Medius & Upper Shelf Abduction',
     focus: 'Standing Cable Abduction, Seated Machine Abduction & Side Work',
-    exerciseIds: ['ex3', 'ex4', 'ex11', 'ex10'] // Standing Cable Abduction, Seated Abduction, 45deg Kickback, Clamshells
+    exerciseIds: ['cable-standing-hip-abduction', 'seated-machine-hip-abduction', 'cable-glute-kickback', 'banded-side-clamshell']
   },
   {
     id: 'glute-stretch',
     name: 'Glute Stretch & Hamstring Tie-in',
     focus: 'RDLs, Bulgarian Split Squats & Glute-Focused Hinges',
-    exerciseIds: ['ex6', 'ex7', 'ex8', 'ex9'] // RDL, Bulgarian Split Squat, Cable Pull-through, 45deg Hyperextension
+    exerciseIds: ['dumbbell-rdl', 'bulgarian-split-squat-glute', 'cable-pull-through', 'hyperextension-45-glute']
   },
   {
     id: 'upper-body',
     name: 'Upper Body Push & Pull',
     focus: 'Lat Pulldowns, Incline Press, Lateral Raises & Back Rows',
-    exerciseIds: ['ex20', 'ex21', 'ex22', 'ex23'] // Lat Pulldown, Dumbbell Incline, Lateral Raise, Cable Row
+    exerciseIds: ['lat-pulldown-cable', 'incline-dumbbell-press', 'dumbbell-lateral-raise', 'seated-cable-row']
   },
   {
     id: 'quads-calves',
     name: 'Quads & Legs Isolation',
     focus: 'Leg Press, Hack Squats, Leg Extensions & Calves',
-    exerciseIds: ['ex24', 'ex25', 'ex26'] // Leg Press, Hack Squat, Leg Extension
+    exerciseIds: ['leg-press-machine', 'hack-squat-machine', 'leg-extension-machine']
   },
   {
     id: 'full-body',
     name: 'Full Body, Core & Conditioning',
     focus: 'Compound movements, Core Stability & Energy Burn',
-    exerciseIds: ['ex1', 'ex20', 'ex6', 'ex27']
+    exerciseIds: ['barbell-hip-thrust', 'lat-pulldown-cable', 'dumbbell-rdl', 'plank-hold']
   }
 ];
 
@@ -87,7 +87,7 @@ export const CreateCustomSplitModal: React.FC<CreateCustomSplitModalProps> = ({
         title: `Day ${idx + 1}: ${preset.name}`,
         focus: preset.focus,
         estimatedMinutes: 45,
-        warmupMobilityIds: ['m1', 'm3'],
+        warmupMobilityIds: ['pre-glute-activation'],
         exercises: preset.exerciseIds.map((exId) => ({
           exerciseId: exId,
           sets: 3,
@@ -115,7 +115,7 @@ export const CreateCustomSplitModal: React.FC<CreateCustomSplitModalProps> = ({
           title: `Day ${nextNum}: ${preset.name}`,
           focus: preset.focus,
           estimatedMinutes: 45,
-          warmupMobilityIds: ['m1', 'm3'],
+          warmupMobilityIds: ['pre-glute-activation'],
           exercises: preset.exerciseIds.map((exId) => ({
             exerciseId: exId,
             sets: 3,
@@ -171,7 +171,7 @@ export const CreateCustomSplitModal: React.FC<CreateCustomSplitModalProps> = ({
       title: `Day ${nextNum}: ${preset.name}`,
       focus: preset.focus,
       estimatedMinutes: 45,
-      warmupMobilityIds: ['m1', 'm3'],
+      warmupMobilityIds: ['pre-glute-activation'],
       exercises: preset.exerciseIds.map((exId) => ({
         exerciseId: exId,
         sets: 3,

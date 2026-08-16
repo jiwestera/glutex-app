@@ -205,7 +205,7 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ logs, unit, on
 
                   {/* Quick View: exercise names only, no set detail */}
                   {isExpanded && (
-                    <div className="flex flex-wrap gap-2 pt-3 border-t border-stone-200/60 animate-fadeIn">
+                    <div className="space-y-1.5 pt-3 border-t border-stone-200/60 animate-fadeIn">
                       {log.exercises.map((e, idx) => {
                         const matchedLibraryEx = allExercises.find(
                           (libEx) => libEx.id === e.exerciseId || libEx.name.toLowerCase() === e.exerciseName.toLowerCase()
@@ -214,11 +214,11 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ logs, unit, on
                         return (
                           <div
                             key={idx}
-                            className="bg-white px-3 py-1.5 rounded-full border border-stone-200/80 text-xs font-medium text-stone-800 flex items-center space-x-1.5"
+                            className="w-full bg-white px-3.5 py-2 rounded-xl border border-stone-200/80 text-xs font-medium text-stone-800 flex items-center justify-between gap-2"
                           >
                             <span>{e.exerciseName}</span>
                             {matchedLibraryEx && (
-                              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-stone-100 text-stone-500 border border-stone-200">
+                              <span className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-stone-100 text-stone-500 border border-stone-200">
                                 {matchedLibraryEx.equipment}
                               </span>
                             )}

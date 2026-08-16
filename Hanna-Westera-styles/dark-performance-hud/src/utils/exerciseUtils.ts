@@ -99,6 +99,16 @@ export const getExerciseMemoryMap = (): Record<string, ExerciseMemoryData> => {
   }
 };
 
+// Picks the best-performing set (highest reps, ties broken by higher weight) to use
+// as next session's target — rather than whichever set happened to be logged first.
+const pickBestSet = <T extends { weightKg: number; reps: number }>(sets: T[]): T => {
+  return sets.reduce((best, current) => {
+    if (current.reps > best.reps) return current;
+    if (current.reps === best.reps && current.weightKg > best.weightKg) return current;
+    return best;
+  }, sets[0]);
+};
+
 export const saveExerciseMemory = (exerciseId: string, sets: { weightKg: number; reps: number }[]) => {
   try {
     if (!sets || sets.length === 0) return;
@@ -106,12 +116,12 @@ export const saveExerciseMemory = (exerciseId: string, sets: { weightKg: number;
     const validSets = sets.filter((s) => s.weightKg > 0 || s.reps > 0);
     if (validSets.length === 0) return;
 
-    // Use Set 1's target weight & reps as the baseline default for all future sets
-    const set1 = validSets[0];
+    // Use the best set's weight & reps as the baseline default for next session
+    const bestSet = pickBestSet(validSets);
     currentMap[exerciseId] = {
-      lastWeightKg: set1.weightKg,
-      lastReps: set1.reps,
-      sets: validSets.map(() => ({ weightKg: set1.weightKg, reps: set1.reps })),
+      lastWeightKg: bestSet.weightKg,
+      lastReps: bestSet.reps,
+      sets: validSets.map(() => ({ weightKg: bestSet.weightKg, reps: bestSet.reps })),
       lastLoggedDate: new Date().toISOString()
     };
 
@@ -131,12 +141,12 @@ export const getLastLoggedForExercise = (
       if (foundEx && foundEx.sets && foundEx.sets.length > 0) {
         const completedOrWeighted = foundEx.sets.filter((s: any) => s.completed || s.weightKg > 0);
         if (completedOrWeighted.length > 0) {
-          // Set 1 weight & reps benchmark for all sets
-          const set1 = completedOrWeighted[0];
+          // Best set (highest reps, ties broken by weight) becomes the benchmark for all sets
+          const bestSet = pickBestSet(completedOrWeighted);
           return {
-            weightKg: set1.weightKg,
-            reps: set1.reps,
-            sets: completedOrWeighted.map(() => ({ weightKg: set1.weightKg, reps: set1.reps }))
+            weightKg: bestSet.weightKg,
+            reps: bestSet.reps,
+            sets: completedOrWeighted.map(() => ({ weightKg: bestSet.weightKg, reps: bestSet.reps }))
           };
         }
       }

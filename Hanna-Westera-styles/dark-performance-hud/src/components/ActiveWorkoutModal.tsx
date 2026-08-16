@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Check, Clock, Plus, Trash2, Award, ArrowLeft, Volume2, VolumeX, Flame, RefreshCw, RotateCcw } from 'lucide-react';
 import { WorkoutDay, LoggedExercise, LoggedSet, WorkoutLog, UnitSystem, PlannedExercise } from '../types';
 import { getAllExercises, getLastLoggedForExercise, saveExerciseMemory } from '../utils/exerciseUtils';
@@ -24,7 +24,11 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
   onFinishWorkout,
   onCancelWorkout
 }) => {
-  // Elapsed workout time
+  // Elapsed workout time — derived from a fixed start timestamp (not an incrementing
+  // counter) so it stays accurate even when the tab/screen is backgrounded. Mobile
+  // browsers throttle setInterval heavily in the background, which previously made
+  // the displayed duration undercount the real elapsed time.
+  const workoutStartRef = useRef<number>(Date.now());
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
 
   // Active Exercises state with previous weight/reps auto-recalled
@@ -56,7 +60,9 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
     });
   });
 
-  // Rest Timer State
+  // Rest Timer State — counts down against a fixed end timestamp for the same
+  // background-throttling reason as the workout timer above.
+  const restEndTimeRef = useRef<number>(0);
   const [restTimerSeconds, setRestTimerSeconds] = useState<number>(0);
   const [restTimerActive, setRestTimerActive] = useState<boolean>(false);
   const [restTimerEnabled, setRestTimerEnabled] = useState<boolean>(true);
@@ -64,6 +70,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
 
   // Completion modal state
   const [showSummary, setShowSummary] = useState<boolean>(false);
+  const [showExitConfirm, setShowExitConfirm] = useState<boolean>(false);
   const [feelingRating, setFeelingRating] = useState<number>(5);
   const [workoutNotes, setWorkoutNotes] = useState<string>('');
   const [swappingExerciseIndex, setSwappingExerciseIndex] = useState<number | null>(null);
@@ -95,31 +102,58 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
   };
 
 
-  // Workout duration timer
+  // Workout duration timer — recomputed from wall-clock time on every tick and
+  // whenever the tab regains focus, so it self-corrects instantly instead of
+  // staying stuck at a throttled/paused count.
   useEffect(() => {
-    const timer = setInterval(() => {
-      setElapsedSeconds((prev) => prev + 1);
-    }, 1000);
-    return () => clearInterval(timer);
+    const tick = () => {
+      setElapsedSeconds(Math.floor((Date.now() - workoutStartRef.current) / 1000));
+    };
+    tick();
+    const timer = setInterval(tick, 1000);
+    document.addEventListener('visibilitychange', tick);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', tick);
+    };
   }, []);
 
-  // Rest countdown timer
+  // Rest countdown timer — same wall-clock approach against a fixed end timestamp.
   useEffect(() => {
-    let interval: any = null;
-    if (restTimerActive && restTimerSeconds > 0) {
-      interval = setInterval(() => {
-        setRestTimerSeconds((prev) => prev - 1);
-      }, 1000);
-    } else if (restTimerSeconds === 0 && restTimerActive) {
-      setRestTimerActive(false);
-      if (soundEnabled) {
-        playRestSound();
+    if (!restTimerActive) return;
+
+    const tick = () => {
+      const remaining = Math.max(0, Math.round((restEndTimeRef.current - Date.now()) / 1000));
+      setRestTimerSeconds(remaining);
+      if (remaining === 0) {
+        setRestTimerActive(false);
+        if (soundEnabled) {
+          playRestSound();
+        }
       }
-    }
-    return () => clearInterval(interval);
-  }, [restTimerActive, restTimerSeconds, soundEnabled]);
+    };
+
+    tick();
+    const interval = setInterval(tick, 1000);
+    document.addEventListener('visibilitychange', tick);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', tick);
+    };
+  }, [restTimerActive, soundEnabled]);
+
+  // Warn before an accidental tab close/refresh loses the in-progress session.
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
 
   const startRestTimer = (seconds: number) => {
+    restEndTimeRef.current = Date.now() + seconds * 1000;
     setRestTimerSeconds(seconds);
     setRestTimerActive(true);
   };
@@ -247,7 +281,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
         <div className="flex items-center justify-between min-w-0 gap-2 w-full sm:w-auto">
           <div className="flex items-center space-x-2.5 min-w-0">
             <button
-              onClick={onCancelWorkout}
+              onClick={() => setShowExitConfirm(true)}
               className="p-1.5 sm:p-2 rounded-full bg-stone-100 text-stone-600 hover:text-stone-900 hover:bg-stone-200 transition-colors shrink-0 cursor-pointer"
               title="Exit Session"
             >
@@ -320,7 +354,10 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
 
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => setRestTimerSeconds((prev) => prev + 30)}
+              onClick={() => {
+                restEndTimeRef.current += 30 * 1000;
+                setRestTimerSeconds((prev) => prev + 30);
+              }}
               className="bg-stone-800 hover:bg-stone-700 px-2.5 py-1 rounded-full text-[10px] font-mono border border-cyan-500/30"
             >
               +30s
@@ -623,6 +660,19 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
           onConfirm={() => {
             deleteSet(setToRemove.exIdx, setToRemove.setIdx);
             setSetToRemove(null);
+          }}
+        />
+      )}
+
+      {showExitConfirm && (
+        <ConfirmModal
+          title="Exit Session?"
+          message="Are you sure you want to exit? This session hasn't been saved yet and all logged sets will be lost."
+          confirmLabel="Exit Without Saving"
+          onCancel={() => setShowExitConfirm(false)}
+          onConfirm={() => {
+            setShowExitConfirm(false);
+            onCancelWorkout();
           }}
         />
       )}

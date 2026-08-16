@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Sparkles, Send, Bot, User, RefreshCw, Wand2, Check, Dumbbell } from 'lucide-react';
 import { UnitSystem } from '../types';
 import { HudSelect } from './HudSelect';
+import { API_BASE_URL } from '../utils/apiBase';
 
 interface AICoachPanelProps {
   daysPerWeek: number;
@@ -46,7 +47,7 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({ daysPerWeek, unit })
     setIsChatLoading(true);
 
     try {
-      const res = await fetch('/api/ai/coach', {
+      const res = await fetch(`${API_BASE_URL}/api/ai/coach`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -83,7 +84,7 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({ daysPerWeek, unit })
     setGeneratedResult(null);
 
     try {
-      const res = await fetch('/api/ai/generate-split', {
+      const res = await fetch(`${API_BASE_URL}/api/ai/generate-split`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

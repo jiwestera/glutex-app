@@ -950,7 +950,7 @@ export const exercisesData: Exercise[] = [
   // ADDITIONAL NON-GLUTE EXERCISES: LEGS
   {
     id: 'barbell-rdl-hamstrings',
-    name: 'Barbell Romanian Deadlift (RDL)',
+    name: 'Barbell Romanian Deadlift (RDL) — Hamstring Focus',
     category: 'Legs Isolation',
     targetRegion: 'Hamstrings & Tie-in',
     bodyGroup: 'Legs',
