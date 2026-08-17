@@ -235,7 +235,7 @@ export const Header: React.FC<HeaderProps> = ({
             { id: 'mobility', label: 'Mobility & Prep', icon: Activity },
             { id: 'library', label: 'Exercise Library', icon: Flame },
             { id: 'progress', label: 'Progress & PRs', icon: Flame },
-            { id: 'ai-coach', label: 'AI Glute Coach', icon: Sparkles, badge: 'AI' }
+            { id: 'ai-coach', label: 'AI Glute Coach', icon: Sparkles }
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -251,15 +251,6 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-stone-500'}`} />
                 <span>{tab.label}</span>
-                {tab.badge && (
-                  <span
-                    className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider ${
-                      isActive ? 'bg-stone-700 text-stone-100' : 'bg-stone-100 text-stone-800 border border-stone-300'
-                    }`}
-                  >
-                    {tab.badge}
-                  </span>
-                )}
               </button>
             );
           })}
