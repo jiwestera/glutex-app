@@ -303,4 +303,36 @@ export const transformSplitForLocation = (
   };
 };
 
+// These three fields (custom exercises, hidden exercise ids, per-exercise memory)
+// live only in localStorage and aren't part of App.tsx's React state tree, so
+// cloud sync reads/writes them directly here rather than threading them through
+// component state.
+export interface LocalOnlySyncFields {
+  customExercises: Exercise[];
+  hiddenExerciseIds: string[];
+  exerciseMemory: Record<string, ExerciseMemoryData>;
+}
+
+export const getLocalOnlySyncFields = (): LocalOnlySyncFields => ({
+  customExercises: getCustomExercises(),
+  hiddenExerciseIds: getHiddenExerciseIds(),
+  exerciseMemory: getExerciseMemoryMap()
+});
+
+export const applyLocalOnlySyncFields = (fields: Partial<LocalOnlySyncFields>) => {
+  try {
+    if (fields.customExercises) {
+      localStorage.setItem(CUSTOM_EXERCISES_KEY, JSON.stringify(fields.customExercises));
+    }
+    if (fields.hiddenExerciseIds) {
+      localStorage.setItem(HIDDEN_EXERCISES_KEY, JSON.stringify(fields.hiddenExerciseIds));
+    }
+    if (fields.exerciseMemory) {
+      localStorage.setItem(EXERCISE_MEMORY_KEY, JSON.stringify(fields.exerciseMemory));
+    }
+  } catch (err) {
+    console.error('Failed to apply synced local-only fields:', err);
+  }
+};
+
 

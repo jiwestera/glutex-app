@@ -23,6 +23,8 @@ import { UnitSystem } from '../types';
 import { LocationPreset } from '../utils/exerciseUtils';
 import { HUD_ACCENT_PRESETS, hueToHex } from '../utils/hudTheme';
 import { RestSoundType, getRestSoundSettings, saveRestSoundSettings, playRestSound } from '../utils/restSound';
+import { SyncUser } from '../utils/firebaseSync';
+import { SyncPanel, SyncStatus } from './SyncPanel';
 
 export type DarkModePreference = 'auto' | 'dark' | 'light';
 
@@ -45,6 +47,12 @@ interface HeaderProps {
   hudAccentHue: number;
   onSelectHudAccentHue: (hue: number) => void;
   onSelectDays: (days: number) => void;
+  syncUser: SyncUser | null;
+  syncStatus: SyncStatus;
+  onSyncSignIn: (email: string, password: string) => Promise<void>;
+  onSyncSignUp: (email: string, password: string) => Promise<void>;
+  onSyncSignOut: () => Promise<void>;
+  onManualSync: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -65,7 +73,13 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectLocationPreset,
   hudAccentHue,
   onSelectHudAccentHue,
-  onSelectDays
+  onSelectDays,
+  syncUser,
+  syncStatus,
+  onSyncSignIn,
+  onSyncSignUp,
+  onSyncSignOut,
+  onManualSync
 }) => {
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
@@ -496,6 +510,18 @@ export const Header: React.FC<HeaderProps> = ({
                   Plays when a rest timer finishes during a workout. Tap a sound to preview it.
                 </p>
               </div>
+            </div>
+
+            {/* Section 4.75: Cross-Device Sync */}
+            <div className="pt-2 border-t border-stone-100">
+              <SyncPanel
+                user={syncUser}
+                status={syncStatus}
+                onSignIn={onSyncSignIn}
+                onSignUp={onSyncSignUp}
+                onSignOut={onSyncSignOut}
+                onManualSync={onManualSync}
+              />
             </div>
 
             {/* Section 5: Clear Data & Footer */}

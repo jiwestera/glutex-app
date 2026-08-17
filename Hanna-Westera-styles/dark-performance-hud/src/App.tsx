@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Header, DarkModePreference } from './components/Header';
 import { DaysPerWeekSelector } from './components/DaysPerWeekSelector';
 import { WorkoutPlanView } from './components/WorkoutPlanView';
@@ -11,8 +11,19 @@ import { AICoachPanel } from './components/AICoachPanel';
 import { prebuiltSplits } from './data/prebuiltSplits';
 import { mobilityRoutines } from './data/mobilityData';
 import { WorkoutSplit, WorkoutLog, UnitSystem, PlannedExercise, MobilityRoutine } from './types';
-import { transformSplitForLocation, LocationPreset } from './utils/exerciseUtils';
+import { transformSplitForLocation, LocationPreset, getLocalOnlySyncFields, applyLocalOnlySyncFields } from './utils/exerciseUtils';
 import { applyHudAccentHue, HUD_DEFAULT_HUE } from './utils/hudTheme';
+import {
+  subscribeToAuthState,
+  signInWithEmail,
+  signUpWithEmail,
+  signOutOfSync,
+  pullSyncedData,
+  pushSyncedData,
+  SyncUser,
+  SyncedData
+} from './utils/firebaseSync';
+import { SyncStatus } from './components/SyncPanel';
 
 // Safely reads & parses a JSON value from localStorage. A future app update that
 // changes a data shape (or any storage corruption) must never crash the whole app
@@ -178,6 +189,99 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('glute_app_custom_warmups', JSON.stringify(customWarmups));
   }, [customWarmups]);
+
+  // Optional cross-device cloud sync (Firebase). Entirely inactive unless a
+  // Firebase project is configured via VITE_FIREBASE_* env vars -- see
+  // utils/firebaseSync.ts. Nothing here runs or affects local-only usage.
+  const [syncUser, setSyncUser] = useState<SyncUser | null>(null);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
+  const hasHydratedFromCloud = useRef(false);
+
+  // Mirrors the latest synced state into a ref so the auth-state callback
+  // (registered once on mount) can read current values instead of the stale
+  // ones captured in its closure at mount time.
+  const syncedStateRef = useRef({ workoutLogs, customSplits, userCreatedSplits, customWarmups });
+  useEffect(() => {
+    syncedStateRef.current = { workoutLogs, customSplits, userCreatedSplits, customWarmups };
+  }, [workoutLogs, customSplits, userCreatedSplits, customWarmups]);
+
+  const buildSyncPayload = (): SyncedData => ({
+    ...syncedStateRef.current,
+    ...getLocalOnlySyncFields()
+  });
+
+  const applyCloudData = (data: SyncedData) => {
+    setWorkoutLogs(data.workoutLogs || []);
+    setCustomSplits(data.customSplits || {});
+    setUserCreatedSplits(data.userCreatedSplits || []);
+    setCustomWarmups(data.customWarmups || []);
+    applyLocalOnlySyncFields({
+      customExercises: data.customExercises || [],
+      hiddenExerciseIds: data.hiddenExerciseIds || [],
+      exerciseMemory: data.exerciseMemory || {}
+    });
+  };
+
+  useEffect(() => {
+    const unsubscribe = subscribeToAuthState(async (user) => {
+      if (!user) {
+        setSyncUser(null);
+        setSyncStatus('idle');
+        hasHydratedFromCloud.current = false;
+        return;
+      }
+
+      setSyncUser(user);
+      setSyncStatus('syncing');
+      try {
+        const cloudData = await pullSyncedData(user.uid);
+        if (cloudData) {
+          // Returning account (or a second device) -- the cloud copy wins.
+          applyCloudData(cloudData);
+        } else {
+          // First time this account has synced: push whatever's local up.
+          await pushSyncedData(user.uid, buildSyncPayload());
+        }
+        hasHydratedFromCloud.current = true;
+        setSyncStatus('synced');
+      } catch (err) {
+        console.error('Cloud sync failed:', err);
+        setSyncStatus('error');
+      }
+    });
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-push on change, debounced so a burst of edits (e.g. logging several
+  // sets in a row) doesn't fire a write per keystroke. Skipped until the
+  // initial pull/push above has resolved, so it can't race and stomp a
+  // just-pulled cloud copy with stale local data.
+  useEffect(() => {
+    if (!syncUser || !hasHydratedFromCloud.current) return;
+    setSyncStatus('syncing');
+    const timeout = setTimeout(() => {
+      pushSyncedData(syncUser.uid, buildSyncPayload())
+        .then(() => setSyncStatus('synced'))
+        .catch((err) => {
+          console.error('Cloud sync push failed:', err);
+          setSyncStatus('error');
+        });
+    }, 1500);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workoutLogs, customSplits, userCreatedSplits, customWarmups, syncUser]);
+
+  const handleManualSync = () => {
+    if (!syncUser) return;
+    setSyncStatus('syncing');
+    pushSyncedData(syncUser.uid, buildSyncPayload())
+      .then(() => setSyncStatus('synced'))
+      .catch((err) => {
+        console.error('Manual sync failed:', err);
+        setSyncStatus('error');
+      });
+  };
 
   const allMobilityRoutines = [...mobilityRoutines, ...customWarmups];
   const allAvailableSplits = [...prebuiltSplits, ...userCreatedSplits];
@@ -592,6 +696,12 @@ export default function App() {
           setDaysPerWeek(days);
           setActiveSplitId(`split-${days}`);
         }}
+        syncUser={syncUser}
+        syncStatus={syncStatus}
+        onSyncSignIn={signInWithEmail}
+        onSyncSignUp={signUpWithEmail}
+        onSyncSignOut={signOutOfSync}
+        onManualSync={handleManualSync}
       />
 
       {/* Main Tab View Router */}
