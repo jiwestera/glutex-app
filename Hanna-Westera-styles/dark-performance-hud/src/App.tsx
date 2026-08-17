@@ -17,7 +17,7 @@ const AICoachPanel = React.lazy(() =>
 import { prebuiltSplits } from './data/prebuiltSplits';
 import { mobilityRoutines } from './data/mobilityData';
 import { WorkoutSplit, WorkoutLog, UnitSystem, PlannedExercise, MobilityRoutine } from './types';
-import { transformSplitForLocation, LocationPreset, getLocalOnlySyncFields, applyLocalOnlySyncFields } from './utils/exerciseUtils';
+import { transformSplitForLocation, LocationPreset, getLocalOnlySyncFields, applyLocalOnlySyncFields, DEFAULT_WARMUP_MOBILITY_IDS } from './utils/exerciseUtils';
 import { applyHudAccentHue, HUD_DEFAULT_HUE } from './utils/hudTheme';
 import {
   subscribeToAuthState,
@@ -30,20 +30,7 @@ import {
   SyncedData
 } from './utils/firebaseSync';
 import { SyncStatus } from './components/SyncPanel';
-
-// Safely reads & parses a JSON value from localStorage. A future app update that
-// changes a data shape (or any storage corruption) must never crash the whole app
-// on load — fall back to the caller's default instead so the user's other data
-// (still sitting in localStorage) stays reachable.
-function loadJSON<T>(key: string, fallback: T): T {
-  try {
-    const saved = localStorage.getItem(key);
-    return saved ? (JSON.parse(saved) as T) : fallback;
-  } catch (err) {
-    console.error(`Failed to load "${key}" from storage:`, err);
-    return fallback;
-  }
-}
+import { loadJSON } from './utils/storage';
 
 export default function App() {
   // Dark Mode preference: 'auto' | 'dark' | 'light'
@@ -548,7 +535,7 @@ export default function App() {
         title: `Day ${newDayNum}: ${title}`,
         focus: focus || 'Non-Glute Focus / Custom Day',
         estimatedMinutes: 45,
-        warmupMobilityIds: ['pre-glute-activation'],
+        warmupMobilityIds: DEFAULT_WARMUP_MOBILITY_IDS,
         exercises: []
       };
 

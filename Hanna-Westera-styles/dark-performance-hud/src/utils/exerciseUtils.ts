@@ -1,78 +1,44 @@
 import { Exercise } from '../types';
 import { exercisesData } from '../data/exercisesData';
+import { loadJSON, saveJSON } from './storage';
 
 const CUSTOM_EXERCISES_KEY = 'glute_app_custom_exercises';
 const HIDDEN_EXERCISES_KEY = 'glute_app_hidden_exercises';
 
-export const getCustomExercises = (): Exercise[] => {
-  try {
-    const saved = localStorage.getItem(CUSTOM_EXERCISES_KEY);
-    return saved ? JSON.parse(saved) : [];
-  } catch (err) {
-    console.error('Failed to load custom exercises:', err);
-    return [];
-  }
-};
+// Default warm-up for a newly created day (custom split builder, "add extra
+// day", AI-generated splits) -- a single shared source so the id can't drift
+// out of sync with mobilityData.ts across call sites the way it did before
+// (previously hardcoded as the non-existent 'm1'/'m3' in three places).
+export const DEFAULT_WARMUP_MOBILITY_IDS = ['pre-glute-activation'];
+
+export const getCustomExercises = (): Exercise[] => loadJSON<Exercise[]>(CUSTOM_EXERCISES_KEY, []);
 
 export const saveCustomExercise = (newExercise: Exercise): Exercise[] => {
-  try {
-    const current = getCustomExercises();
-    const updated = [newExercise, ...current.filter((e) => e.id !== newExercise.id)];
-    localStorage.setItem(CUSTOM_EXERCISES_KEY, JSON.stringify(updated));
-    return updated;
-  } catch (err) {
-    console.error('Failed to save custom exercise:', err);
-    return getCustomExercises();
-  }
+  const updated = [newExercise, ...getCustomExercises().filter((e) => e.id !== newExercise.id)];
+  saveJSON(CUSTOM_EXERCISES_KEY, updated);
+  return updated;
 };
 
 export const deleteCustomExercise = (id: string): Exercise[] => {
-  try {
-    const current = getCustomExercises();
-    const updated = current.filter((e) => e.id !== id);
-    localStorage.setItem(CUSTOM_EXERCISES_KEY, JSON.stringify(updated));
-    return updated;
-  } catch (err) {
-    console.error('Failed to delete custom exercise:', err);
-    return getCustomExercises();
-  }
+  const updated = getCustomExercises().filter((e) => e.id !== id);
+  saveJSON(CUSTOM_EXERCISES_KEY, updated);
+  return updated;
 };
 
-export const getHiddenExerciseIds = (): string[] => {
-  try {
-    const saved = localStorage.getItem(HIDDEN_EXERCISES_KEY);
-    return saved ? JSON.parse(saved) : [];
-  } catch (err) {
-    console.error('Failed to load hidden exercises:', err);
-    return [];
-  }
-};
+export const getHiddenExerciseIds = (): string[] => loadJSON<string[]>(HIDDEN_EXERCISES_KEY, []);
 
 export const hideExercise = (id: string): string[] => {
-  try {
-    const current = getHiddenExerciseIds();
-    if (!current.includes(id)) {
-      const updated = [...current, id];
-      localStorage.setItem(HIDDEN_EXERCISES_KEY, JSON.stringify(updated));
-      return updated;
-    }
-    return current;
-  } catch (err) {
-    console.error('Failed to hide exercise:', err);
-    return getHiddenExerciseIds();
-  }
+  const current = getHiddenExerciseIds();
+  if (current.includes(id)) return current;
+  const updated = [...current, id];
+  saveJSON(HIDDEN_EXERCISES_KEY, updated);
+  return updated;
 };
 
 export const unhideExercise = (id: string): string[] => {
-  try {
-    const current = getHiddenExerciseIds();
-    const updated = current.filter((item) => item !== id);
-    localStorage.setItem(HIDDEN_EXERCISES_KEY, JSON.stringify(updated));
-    return updated;
-  } catch (err) {
-    console.error('Failed to unhide exercise:', err);
-    return getHiddenExerciseIds();
-  }
+  const updated = getHiddenExerciseIds().filter((item) => item !== id);
+  saveJSON(HIDDEN_EXERCISES_KEY, updated);
+  return updated;
 };
 
 export const getAllExercises = (): Exercise[] => {
@@ -89,15 +55,8 @@ export interface ExerciseMemoryData {
   lastLoggedDate?: string;
 }
 
-export const getExerciseMemoryMap = (): Record<string, ExerciseMemoryData> => {
-  try {
-    const saved = localStorage.getItem(EXERCISE_MEMORY_KEY);
-    return saved ? JSON.parse(saved) : {};
-  } catch (err) {
-    console.error('Failed to load exercise memory:', err);
-    return {};
-  }
-};
+export const getExerciseMemoryMap = (): Record<string, ExerciseMemoryData> =>
+  loadJSON<Record<string, ExerciseMemoryData>>(EXERCISE_MEMORY_KEY, {});
 
 // Picks the best-performing set (highest reps, ties broken by higher weight) to use
 // as next session's target — rather than whichever set happened to be logged first.
@@ -110,25 +69,21 @@ const pickBestSet = <T extends { weightKg: number; reps: number }>(sets: T[]): T
 };
 
 export const saveExerciseMemory = (exerciseId: string, sets: { weightKg: number; reps: number }[]) => {
-  try {
-    if (!sets || sets.length === 0) return;
-    const currentMap = getExerciseMemoryMap();
-    const validSets = sets.filter((s) => s.weightKg > 0 || s.reps > 0);
-    if (validSets.length === 0) return;
+  if (!sets || sets.length === 0) return;
+  const currentMap = getExerciseMemoryMap();
+  const validSets = sets.filter((s) => s.weightKg > 0 || s.reps > 0);
+  if (validSets.length === 0) return;
 
-    // Use the best set's weight & reps as the baseline default for next session
-    const bestSet = pickBestSet(validSets);
-    currentMap[exerciseId] = {
-      lastWeightKg: bestSet.weightKg,
-      lastReps: bestSet.reps,
-      sets: validSets.map(() => ({ weightKg: bestSet.weightKg, reps: bestSet.reps })),
-      lastLoggedDate: new Date().toISOString()
-    };
+  // Use the best set's weight & reps as the baseline default for next session
+  const bestSet = pickBestSet(validSets);
+  currentMap[exerciseId] = {
+    lastWeightKg: bestSet.weightKg,
+    lastReps: bestSet.reps,
+    sets: validSets.map(() => ({ weightKg: bestSet.weightKg, reps: bestSet.reps })),
+    lastLoggedDate: new Date().toISOString()
+  };
 
-    localStorage.setItem(EXERCISE_MEMORY_KEY, JSON.stringify(currentMap));
-  } catch (err) {
-    console.error('Failed to save exercise memory:', err);
-  }
+  saveJSON(EXERCISE_MEMORY_KEY, currentMap);
 };
 
 export const getLastLoggedForExercise = (
@@ -320,19 +275,9 @@ export const getLocalOnlySyncFields = (): LocalOnlySyncFields => ({
 });
 
 export const applyLocalOnlySyncFields = (fields: Partial<LocalOnlySyncFields>) => {
-  try {
-    if (fields.customExercises) {
-      localStorage.setItem(CUSTOM_EXERCISES_KEY, JSON.stringify(fields.customExercises));
-    }
-    if (fields.hiddenExerciseIds) {
-      localStorage.setItem(HIDDEN_EXERCISES_KEY, JSON.stringify(fields.hiddenExerciseIds));
-    }
-    if (fields.exerciseMemory) {
-      localStorage.setItem(EXERCISE_MEMORY_KEY, JSON.stringify(fields.exerciseMemory));
-    }
-  } catch (err) {
-    console.error('Failed to apply synced local-only fields:', err);
-  }
+  if (fields.customExercises) saveJSON(CUSTOM_EXERCISES_KEY, fields.customExercises);
+  if (fields.hiddenExerciseIds) saveJSON(HIDDEN_EXERCISES_KEY, fields.hiddenExerciseIds);
+  if (fields.exerciseMemory) saveJSON(EXERCISE_MEMORY_KEY, fields.exerciseMemory);
 };
 
 

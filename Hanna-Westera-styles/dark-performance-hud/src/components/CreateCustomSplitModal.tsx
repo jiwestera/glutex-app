@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Calendar, Plus, Trash2, Sparkles, Check, Dumbbell, Clock } from 'lucide-react';
 import { WorkoutSplit, WorkoutDay, PlannedExercise } from '../types';
 import { exercisesData } from '../data/exercisesData';
+import { DEFAULT_WARMUP_MOBILITY_IDS } from '../utils/exerciseUtils';
 import { ConfirmModal } from './ConfirmModal';
 import { HudSelect } from './HudSelect';
 
@@ -87,7 +88,7 @@ export const CreateCustomSplitModal: React.FC<CreateCustomSplitModalProps> = ({
         title: `Day ${idx + 1}: ${preset.name}`,
         focus: preset.focus,
         estimatedMinutes: 45,
-        warmupMobilityIds: ['pre-glute-activation'],
+        warmupMobilityIds: DEFAULT_WARMUP_MOBILITY_IDS,
         exercises: preset.exerciseIds.map((exId) => ({
           exerciseId: exId,
           sets: 3,
@@ -115,7 +116,7 @@ export const CreateCustomSplitModal: React.FC<CreateCustomSplitModalProps> = ({
           title: `Day ${nextNum}: ${preset.name}`,
           focus: preset.focus,
           estimatedMinutes: 45,
-          warmupMobilityIds: ['pre-glute-activation'],
+          warmupMobilityIds: DEFAULT_WARMUP_MOBILITY_IDS,
           exercises: preset.exerciseIds.map((exId) => ({
             exerciseId: exId,
             sets: 3,
@@ -171,7 +172,7 @@ export const CreateCustomSplitModal: React.FC<CreateCustomSplitModalProps> = ({
       title: `Day ${nextNum}: ${preset.name}`,
       focus: preset.focus,
       estimatedMinutes: 45,
-      warmupMobilityIds: ['pre-glute-activation'],
+      warmupMobilityIds: DEFAULT_WARMUP_MOBILITY_IDS,
       exercises: preset.exerciseIds.map((exId) => ({
         exerciseId: exId,
         sets: 3,

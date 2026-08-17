@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Play, Pause, SkipForward, SkipBack, RotateCcw, CheckCircle2, Shield, Sparkles, Volume2, VolumeX } from 'lucide-react';
 import { MobilityRoutine, MobilityStep } from '../types';
+import { useCountdownTimer } from '../utils/useWallClockTimer';
 
 interface GuidedWarmupModalProps {
   routine: MobilityRoutine;
@@ -9,7 +10,6 @@ interface GuidedWarmupModalProps {
 
 export const GuidedWarmupModal: React.FC<GuidedWarmupModalProps> = ({ routine, onClose }) => {
   const [activeStepIndex, setActiveStepIndex] = useState<number>(0);
-  const [isTimerRunning, setIsTimerRunning] = useState<boolean>(true);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
 
@@ -21,22 +21,6 @@ export const GuidedWarmupModal: React.FC<GuidedWarmupModalProps> = ({ routine, o
   };
 
   const currentStep = routine.steps[activeStepIndex];
-  const [stepTimerSeconds, setStepTimerSeconds] = useState<number>(() => getSecondsFromStep(currentStep));
-
-  // Countdown deadline as a wall-clock timestamp, not a tick counter — keeps the
-  // displayed time accurate even if setInterval gets throttled (e.g. screen locks
-  // mid-warmup), the same fix applied to the active workout's timers.
-  const endTimeRef = useRef<number>(Date.now() + getSecondsFromStep(currentStep) * 1000);
-
-  // Reset timer when step index changes
-  useEffect(() => {
-    if (currentStep) {
-      const seconds = getSecondsFromStep(currentStep);
-      endTimeRef.current = Date.now() + seconds * 1000;
-      setStepTimerSeconds(seconds);
-      setIsTimerRunning(true);
-    }
-  }, [activeStepIndex, routine]);
 
   // Play audio chime
   const playChime = () => {
@@ -60,40 +44,31 @@ export const GuidedWarmupModal: React.FC<GuidedWarmupModalProps> = ({ routine, o
     }
   };
 
-  // Timer interval countdown — recomputed from the wall-clock deadline on every
-  // tick and on tab-visibility change, so it self-corrects instead of drifting.
+  // Wall-clock based countdown (see utils/useWallClockTimer.ts) -- stays accurate
+  // through background throttling and self-corrects on tab-visibility change.
+  const countdown = useCountdownTimer(() => {
+    playChime();
+    if (activeStepIndex < routine.steps.length - 1) {
+      setActiveStepIndex((prev) => prev + 1);
+    } else {
+      setIsCompleted(true);
+    }
+  });
+
+  // Reset (and start) the timer whenever the active step changes.
   useEffect(() => {
-    if (!isTimerRunning || isCompleted) return;
-
-    const tick = () => {
-      const remaining = Math.max(0, Math.round((endTimeRef.current - Date.now()) / 1000));
-      setStepTimerSeconds(remaining);
-      if (remaining === 0) {
-        playChime();
-        if (activeStepIndex < routine.steps.length - 1) {
-          setActiveStepIndex((prev) => prev + 1);
-        } else {
-          setIsTimerRunning(false);
-          setIsCompleted(true);
-        }
-      }
-    };
-
-    tick();
-    const interval = setInterval(tick, 1000);
-    document.addEventListener('visibilitychange', tick);
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', tick);
-    };
-  }, [isTimerRunning, isCompleted, activeStepIndex, routine, soundEnabled]);
+    if (currentStep) {
+      countdown.start(getSecondsFromStep(currentStep));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeStepIndex, routine]);
 
   const handleNextStep = () => {
     if (activeStepIndex < routine.steps.length - 1) {
       setActiveStepIndex((prev) => prev + 1);
     } else {
       setIsCompleted(true);
-      setIsTimerRunning(false);
+      countdown.stop();
     }
   };
 
@@ -104,21 +79,7 @@ export const GuidedWarmupModal: React.FC<GuidedWarmupModalProps> = ({ routine, o
   };
 
   const handleResetStep = () => {
-    const seconds = getSecondsFromStep(currentStep);
-    endTimeRef.current = Date.now() + seconds * 1000;
-    setStepTimerSeconds(seconds);
-    setIsTimerRunning(true);
-  };
-
-  const toggleTimer = () => {
-    setIsTimerRunning((prev) => {
-      const next = !prev;
-      if (next) {
-        // Resuming from pause: re-anchor the deadline from whatever time was left.
-        endTimeRef.current = Date.now() + stepTimerSeconds * 1000;
-      }
-      return next;
-    });
+    countdown.start(getSecondsFromStep(currentStep));
   };
 
   return (
@@ -252,13 +213,13 @@ export const GuidedWarmupModal: React.FC<GuidedWarmupModalProps> = ({ routine, o
               <div
                 className="relative w-36 h-36 rounded-full flex items-center justify-center p-1.5"
                 style={{
-                  background: `conic-gradient(var(--hud-cyan) ${Math.max(0, Math.min(100, (1 - stepTimerSeconds / (getSecondsFromStep(currentStep) || 1)) * 100))}%, rgba(var(--hud-cyan-rgb), 0.12) 0)`,
+                  background: `conic-gradient(var(--hud-cyan) ${Math.max(0, Math.min(100, (1 - countdown.remaining / (getSecondsFromStep(currentStep) || 1)) * 100))}%, rgba(var(--hud-cyan-rgb), 0.12) 0)`,
                   boxShadow: '0 0 24px -4px rgba(var(--hud-cyan-rgb), 0.6)'
                 }}
               >
                 <div className="w-full h-full rounded-full bg-stone-900 flex flex-col items-center justify-center shadow-inner">
                   <span className="text-4xl font-mono font-light glow-text-cyan">
-                    {stepTimerSeconds}s
+                    {countdown.remaining}s
                   </span>
                   <span className="text-[10px] text-stone-400 font-mono mt-1">
                     {currentStep.durationOrReps}
@@ -277,11 +238,11 @@ export const GuidedWarmupModal: React.FC<GuidedWarmupModalProps> = ({ routine, o
                 </button>
 
                 <button
-                  onClick={toggleTimer}
+                  onClick={countdown.toggleActive}
                   className="p-4 bg-white text-stone-950 font-bold rounded-full shadow-md hover:bg-stone-100 transition-colors cursor-pointer"
-                  title={isTimerRunning ? 'Pause Timer' : 'Resume Timer'}
+                  title={countdown.active ? 'Pause Timer' : 'Resume Timer'}
                 >
-                  {isTimerRunning ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
+                  {countdown.active ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
                 </button>
 
                 <button

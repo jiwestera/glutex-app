@@ -1,3 +1,5 @@
+import { loadJSON, saveJSON } from './storage';
+
 export type RestSoundType = 'chime' | 'beep' | 'double-beep';
 
 export interface RestSoundSettings {
@@ -12,24 +14,12 @@ const DEFAULT_SETTINGS: RestSoundSettings = {
   volume: 50
 };
 
-export const getRestSoundSettings = (): RestSoundSettings => {
-  try {
-    const saved = localStorage.getItem(REST_SOUND_KEY);
-    if (!saved) return DEFAULT_SETTINGS;
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
-  } catch (err) {
-    console.error('Failed to load rest sound settings:', err);
-    return DEFAULT_SETTINGS;
-  }
-};
+export const getRestSoundSettings = (): RestSoundSettings => ({
+  ...DEFAULT_SETTINGS,
+  ...loadJSON<Partial<RestSoundSettings>>(REST_SOUND_KEY, {})
+});
 
-export const saveRestSoundSettings = (settings: RestSoundSettings) => {
-  try {
-    localStorage.setItem(REST_SOUND_KEY, JSON.stringify(settings));
-  } catch (err) {
-    console.error('Failed to save rest sound settings:', err);
-  }
-};
+export const saveRestSoundSettings = (settings: RestSoundSettings) => saveJSON(REST_SOUND_KEY, settings);
 
 // Gentle envelope so tones fade in/out instead of clicking on/off.
 const playTone = (

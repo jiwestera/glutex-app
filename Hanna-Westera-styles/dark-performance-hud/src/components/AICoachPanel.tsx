@@ -5,7 +5,7 @@ import { Sparkles, Send, Bot, User, RefreshCw, Wand2, Check, Dumbbell } from 'lu
 import { UnitSystem, WorkoutSplit, WorkoutDay, PlannedExercise, Exercise, BodyGroup } from '../types';
 import { HudSelect } from './HudSelect';
 import { API_BASE_URL } from '../utils/apiBase';
-import { getAllExercises, saveCustomExercise } from '../utils/exerciseUtils';
+import { getAllExercises, saveCustomExercise, DEFAULT_WARMUP_MOBILITY_IDS } from '../utils/exerciseUtils';
 
 // Renders the AI coach's markdown (bold, headers, bullet lists) with styling that
 // matches the chat bubble's existing typography, instead of showing raw ** and ###.
@@ -139,7 +139,7 @@ const buildSplitFromGeneratedResult = (result: any, level: string, equipmentLabe
       title: `Day ${day.dayNumber || idx + 1}: ${cleanTitle}`,
       focus: day.focus || '',
       estimatedMinutes: Number(day.estimatedMinutes) || 45,
-      warmupMobilityIds: ['pre-glute-activation'],
+      warmupMobilityIds: DEFAULT_WARMUP_MOBILITY_IDS,
       exercises: (day.exercises || []).map(
         (ex: any): PlannedExercise => ({
           exerciseId: resolveOrCreateExerciseId(ex, library, equipmentLabel, level),

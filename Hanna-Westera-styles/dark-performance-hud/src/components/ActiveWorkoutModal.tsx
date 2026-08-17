@@ -3,6 +3,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { Check, Clock, Plus, Trash2, Award, ArrowLeft, Volume2, VolumeX, Flame, RefreshCw, RotateCcw } from 'lucide-react';
 import { WorkoutDay, LoggedExercise, LoggedSet, WorkoutLog, UnitSystem, PlannedExercise } from '../types';
 import { getAllExercises, getLastLoggedForExercise, saveExerciseMemory } from '../utils/exerciseUtils';
+import { useElapsedTimer, useCountdownTimer } from '../utils/useWallClockTimer';
 import { playRestSound } from '../utils/restSound';
 import { ExerciseSwapModal } from './ExerciseSwapModal';
 import { AddExerciseModal } from './AddExerciseModal';
@@ -25,12 +26,9 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
   onFinishWorkout,
   onCancelWorkout
 }) => {
-  // Elapsed workout time — derived from a fixed start timestamp (not an incrementing
-  // counter) so it stays accurate even when the tab/screen is backgrounded. Mobile
-  // browsers throttle setInterval heavily in the background, which previously made
-  // the displayed duration undercount the real elapsed time.
-  const workoutStartRef = useRef<number>(Date.now());
-  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+  // Elapsed workout time -- wall-clock based so it stays accurate even when the
+  // tab/screen is backgrounded (see utils/useWallClockTimer.ts).
+  const elapsedSeconds = useElapsedTimer();
 
   // Active Exercises state with previous weight/reps auto-recalled
   const [loggedExercises, setLoggedExercises] = useState<LoggedExercise[]>(() => {
@@ -61,13 +59,12 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
     });
   });
 
-  // Rest Timer State — counts down against a fixed end timestamp for the same
-  // background-throttling reason as the workout timer above.
-  const restEndTimeRef = useRef<number>(0);
-  const [restTimerSeconds, setRestTimerSeconds] = useState<number>(0);
-  const [restTimerActive, setRestTimerActive] = useState<boolean>(false);
-  const [restTimerEnabled, setRestTimerEnabled] = useState<boolean>(true);
+  // Rest Timer -- same wall-clock approach as the elapsed timer above.
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const restTimer = useCountdownTimer(() => {
+    if (soundEnabled) playRestSound();
+  });
+  const [restTimerEnabled, setRestTimerEnabled] = useState<boolean>(true);
 
   // Completion modal state
   const [showSummary, setShowSummary] = useState<boolean>(false);
@@ -102,46 +99,6 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
     setIsAddingLiveExercise(false);
   };
 
-
-  // Workout duration timer — recomputed from wall-clock time on every tick and
-  // whenever the tab regains focus, so it self-corrects instantly instead of
-  // staying stuck at a throttled/paused count.
-  useEffect(() => {
-    const tick = () => {
-      setElapsedSeconds(Math.floor((Date.now() - workoutStartRef.current) / 1000));
-    };
-    tick();
-    const timer = setInterval(tick, 1000);
-    document.addEventListener('visibilitychange', tick);
-    return () => {
-      clearInterval(timer);
-      document.removeEventListener('visibilitychange', tick);
-    };
-  }, []);
-
-  // Rest countdown timer — same wall-clock approach against a fixed end timestamp.
-  useEffect(() => {
-    if (!restTimerActive) return;
-
-    const tick = () => {
-      const remaining = Math.max(0, Math.round((restEndTimeRef.current - Date.now()) / 1000));
-      setRestTimerSeconds(remaining);
-      if (remaining === 0) {
-        setRestTimerActive(false);
-        if (soundEnabled) {
-          playRestSound();
-        }
-      }
-    };
-
-    tick();
-    const interval = setInterval(tick, 1000);
-    document.addEventListener('visibilitychange', tick);
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', tick);
-    };
-  }, [restTimerActive, soundEnabled]);
 
   // Warn before an accidental tab close/refresh loses the in-progress session.
   useEffect(() => {
@@ -182,12 +139,6 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
       listenerPromise.then((handle) => handle.remove());
     };
   }, [showExitConfirm, showSummary, setToRemove, exerciseToRemove, isAddingLiveExercise, swappingExerciseIndex]);
-
-  const startRestTimer = (seconds: number) => {
-    restEndTimeRef.current = Date.now() + seconds * 1000;
-    setRestTimerSeconds(seconds);
-    setRestTimerActive(true);
-  };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -239,7 +190,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
       const planned = day.exercises.find((p) => p.exerciseId === currentEx?.exerciseId) || day.exercises[exIndex];
       const restTarget = planned ? planned.restSeconds : 0;
       if (restTarget > 0) {
-        startRestTimer(restTarget);
+        restTimer.start(restTarget);
       }
     }
   };
@@ -375,29 +326,23 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
       </div>
 
       {/* Floating Rest Timer Bar */}
-      {restTimerSeconds > 0 && (
+      {restTimer.remaining > 0 && (
         <div className="bg-stone-900 text-stone-100 px-6 py-3 flex items-center justify-between shadow-md text-xs font-medium border-b-2 border-cyan-400/60 animate-fadeIn glow-border-cyan">
           <div className="flex items-center space-x-3">
             <Clock className="w-4 h-4 text-cyan-300 animate-spin" />
             <span className="tracking-wide uppercase text-[10px] text-stone-400">Rest Period</span>
-            <strong className="font-mono text-2xl glow-text-cyan tracking-tight">{formatTime(restTimerSeconds)}</strong>
+            <strong className="font-mono text-2xl glow-text-cyan tracking-tight">{formatTime(restTimer.remaining)}</strong>
           </div>
 
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => {
-                restEndTimeRef.current += 30 * 1000;
-                setRestTimerSeconds((prev) => prev + 30);
-              }}
+              onClick={() => restTimer.addSeconds(30)}
               className="bg-stone-800 hover:bg-stone-700 px-2.5 py-1 rounded-full text-[10px] font-mono border border-cyan-500/30"
             >
               +30s
             </button>
             <button
-              onClick={() => {
-                setRestTimerSeconds(0);
-                setRestTimerActive(false);
-              }}
+              onClick={() => restTimer.stop()}
               className="bg-stone-800 hover:bg-stone-700 px-2.5 py-1 rounded-full text-[10px]"
             >
               Skip Rest
