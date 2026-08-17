@@ -246,8 +246,14 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* OPTIONS MENU MODAL */}
       {isOptionsOpen && (
-        <div className="fixed inset-0 bg-stone-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white hud-modal-solid border border-stone-200 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-150 text-left max-h-[90vh] overflow-y-auto hud-corners">
+        <div
+          onClick={() => setIsOptionsOpen(false)}
+          className="fixed inset-0 bg-stone-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white hud-modal-solid border border-stone-200 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-150 text-left max-h-[90vh] overflow-y-auto hud-corners"
+          >
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-stone-100 pb-4">
               <div className="flex items-center space-x-3">
