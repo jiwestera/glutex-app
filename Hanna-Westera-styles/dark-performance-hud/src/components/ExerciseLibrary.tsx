@@ -188,7 +188,7 @@ export const ExerciseLibrary: React.FC = () => {
         {/* Hidden Exercises Menu Switcher */}
         <div className="flex items-center justify-between pt-2 border-t border-stone-100 text-xs">
           <div className="flex items-center space-x-2 text-stone-500 font-medium">
-            <span>Showing <span className="font-mono glow-text-cyan">{filteredExercises.length}</span> movements</span>
+            <span>Showing <span className="font-mono glow-text-cyan">{filteredExercises.length}</span> movement{filteredExercises.length === 1 ? '' : 's'}</span>
             {hiddenIds.length > 0 && (
               <span className="text-stone-400">(<span className="font-mono">{hiddenIds.length}</span> hidden)</span>
             )}

@@ -1,15 +1,136 @@
 import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Sparkles, Send, Bot, User, RefreshCw, Wand2, Check, Dumbbell } from 'lucide-react';
-import { UnitSystem } from '../types';
+import { UnitSystem, WorkoutSplit, WorkoutDay, PlannedExercise, Exercise } from '../types';
 import { HudSelect } from './HudSelect';
 import { API_BASE_URL } from '../utils/apiBase';
+import { getAllExercises, saveCustomExercise } from '../utils/exerciseUtils';
+
+// Renders the AI coach's markdown (bold, headers, bullet lists) with styling that
+// matches the chat bubble's existing typography, instead of showing raw ** and ###.
+const aiMessageMarkdownComponents = {
+  p: ({ children }: any) => <p className="mb-2 last:mb-0">{children}</p>,
+  strong: ({ children }: any) => <strong className="font-semibold text-stone-950">{children}</strong>,
+  em: ({ children }: any) => <em className="italic">{children}</em>,
+  ul: ({ children }: any) => <ul className="list-disc pl-4 mb-2 last:mb-0 space-y-0.5">{children}</ul>,
+  ol: ({ children }: any) => <ol className="list-decimal pl-4 mb-2 last:mb-0 space-y-0.5">{children}</ol>,
+  li: ({ children }: any) => <li>{children}</li>,
+  h1: ({ children }: any) => <h1 className="text-sm font-semibold text-stone-950 mt-1 mb-1.5">{children}</h1>,
+  h2: ({ children }: any) => <h2 className="text-sm font-semibold text-stone-950 mt-1 mb-1.5">{children}</h2>,
+  h3: ({ children }: any) => <h3 className="text-xs sm:text-sm font-semibold text-stone-950 mt-1 mb-1">{children}</h3>,
+  code: ({ children }: any) => <code className="bg-stone-200/70 rounded px-1 py-0.5 font-mono text-[11px]">{children}</code>,
+  a: ({ children, href }: any) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="underline text-cyan-700 hover:text-cyan-800">
+      {children}
+    </a>
+  )
+};
+
+// Resolves an AI-suggested exercise name to a real library exercise ID where
+// possible; otherwise creates and persists a lightweight custom exercise so the
+// generated split can still be saved as a normal, fully usable routine.
+const resolveOrCreateExerciseId = (
+  aiExercise: { name?: string; targetRegion?: string; restSeconds?: number },
+  library: Exercise[],
+  equipmentLabel: string,
+  level: string
+): string => {
+  const nameLower = (aiExercise.name || '').trim().toLowerCase();
+  const exactMatch = library.find((e) => e.name.toLowerCase() === nameLower);
+  if (exactMatch) return exactMatch.id;
+
+  const partialMatch = library.find(
+    (e) => nameLower.length > 3 && (e.name.toLowerCase().includes(nameLower) || nameLower.includes(e.name.toLowerCase()))
+  );
+  if (partialMatch) return partialMatch.id;
+
+  const guessedEquipment: Exercise['equipment'] = equipmentLabel.includes('Bodyweight')
+    ? 'Bodyweight'
+    : equipmentLabel.includes('Dumbbell')
+    ? 'Dumbbell'
+    : 'Machine';
+
+  const guessedDifficulty: Exercise['difficulty'] = level.startsWith('Beginner')
+    ? 'Beginner'
+    : level.startsWith('Advanced')
+    ? 'Advanced'
+    : 'Intermediate';
+
+  // Some places in the app fall back to displaying exerciseId.replace(/-/g, ' ')
+  // when a lookup isn't convenient (e.g. split-day preview cards) — keep this
+  // slug name-first and short so that fallback still reads as a real exercise
+  // name instead of a raw timestamp.
+  const nameSlug = (aiExercise.name || 'ai-exercise')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  const newExercise: Exercise = {
+    id: `custom-ai-${nameSlug}-${Date.now().toString(36)}`,
+    name: aiExercise.name || 'AI Suggested Exercise',
+    category: 'Compound Heavy',
+    targetRegion: aiExercise.targetRegion || 'Gluteus Maximus',
+    equipment: guessedEquipment,
+    description: 'AI-generated custom exercise from your tailored routine.',
+    setupInstructions: ['Set up comfortably with proper form.'],
+    techniqueCues: ['Maintain controlled movement and mind-muscle connection.'],
+    commonMistakes: ['Rushing reps without controlled tempo.'],
+    biomechanicsType: 'Compound',
+    difficulty: guessedDifficulty,
+    defaultRestSeconds: Number(aiExercise.restSeconds) || 60
+  };
+  saveCustomExercise(newExercise);
+  library.push(newExercise); // avoid recreating duplicates within the same generated split
+  return newExercise.id;
+};
+
+const buildSplitFromGeneratedResult = (result: any, level: string, equipmentLabel: string): WorkoutSplit => {
+  const library = getAllExercises();
+
+  const days: WorkoutDay[] = (result.days || []).map((day: any, idx: number) => {
+    // The AI sometimes already prefixes its title with "Day N: " itself — strip
+    // any such prefix before adding our own, guaranteed-correct one, so it
+    // doesn't double up as "Day 1: Day 1: ...".
+    const cleanTitle = (day.title || 'AI Custom Day').replace(/^Day\s+\d+:\s*/i, '');
+    return {
+      dayNumber: day.dayNumber || idx + 1,
+      title: `Day ${day.dayNumber || idx + 1}: ${cleanTitle}`,
+      focus: day.focus || '',
+      estimatedMinutes: Number(day.estimatedMinutes) || 45,
+      warmupMobilityIds: ['pre-glute-activation'],
+      exercises: (day.exercises || []).map(
+        (ex: any): PlannedExercise => ({
+          exerciseId: resolveOrCreateExerciseId(ex, library, equipmentLabel, level),
+          sets: Number(ex.sets) || 3,
+          reps: ex.reps || '10-12',
+          rpe: ex.rpe || 'RPE 8',
+          restSeconds: Number(ex.restSeconds) || 90,
+          notes: ex.notes || undefined
+        })
+      )
+    };
+  });
+
+  return {
+    id: `ai-split-${Date.now()}`,
+    daysPerWeek: days.length,
+    name: result.splitTitle || 'AI Custom Split',
+    tagline: 'Generated by your AI Glute Specialist.',
+    description: result.summary || '',
+    weeklyVolumeNotes: Array.isArray(result.keyPrinciples) ? result.keyPrinciples.join(' ') : 'AI-generated training split.',
+    idealDaysSchedule: 'Flexible Weekly Schedule',
+    days
+  };
+};
 
 interface AICoachPanelProps {
   daysPerWeek: number;
   unit: UnitSystem;
+  onSaveGeneratedSplit: (split: WorkoutSplit) => void;
+  onViewSavedSplit: () => void;
 }
 
-export const AICoachPanel: React.FC<AICoachPanelProps> = ({ daysPerWeek, unit }) => {
+export const AICoachPanel: React.FC<AICoachPanelProps> = ({ daysPerWeek, unit, onSaveGeneratedSplit, onViewSavedSplit }) => {
   const [activeTab, setActiveTab] = useState<'chat' | 'custom-generator'>('chat');
 
   // Chat state
@@ -29,6 +150,7 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({ daysPerWeek, unit })
   const [genFocusAreas, setGenFocusAreas] = useState<string[]>(['Gluteus Maximus', 'Upper Shelf (Medius)']);
   const [generatedResult, setGeneratedResult] = useState<any | null>(null);
   const [isGenLoading, setIsGenLoading] = useState<boolean>(false);
+  const [isGeneratedSplitSaved, setIsGeneratedSplitSaved] = useState<boolean>(false);
 
   const presetQuestions = [
     'How do I fix quad dominance during barbell hip thrusts?',
@@ -82,6 +204,7 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({ daysPerWeek, unit })
   const handleGenerateCustomSplit = async () => {
     setIsGenLoading(true);
     setGeneratedResult(null);
+    setIsGeneratedSplitSaved(false);
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/ai/generate-split`, {
@@ -111,6 +234,13 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({ daysPerWeek, unit })
     setGenFocusAreas((prev) =>
       prev.includes(area) ? prev.filter((a) => a !== area) : [...prev, area]
     );
+  };
+
+  const handleSaveGeneratedSplit = () => {
+    if (!generatedResult) return;
+    const split = buildSplitFromGeneratedResult(generatedResult, genLevel, genEquipment);
+    onSaveGeneratedSplit(split);
+    setIsGeneratedSplitSaved(true);
   };
 
   return (
@@ -189,11 +319,15 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({ daysPerWeek, unit })
                 <div
                   className={`max-w-xl rounded-2xl p-4 text-xs sm:text-sm leading-relaxed ${
                     msg.sender === 'user'
-                      ? 'bg-stone-900 text-white rounded-tr-none border border-lime-400/40'
-                      : 'bg-stone-50 border border-cyan-500/20 text-stone-800 rounded-tl-none whitespace-pre-wrap'
+                      ? 'bg-stone-900 text-white rounded-tr-none border border-lime-400/40 whitespace-pre-wrap'
+                      : 'bg-stone-50 border border-cyan-500/20 text-stone-800 rounded-tl-none'
                   }`}
                 >
-                  {msg.text}
+                  {msg.sender === 'ai' ? (
+                    <ReactMarkdown components={aiMessageMarkdownComponents}>{msg.text}</ReactMarkdown>
+                  ) : (
+                    msg.text
+                  )}
                 </div>
 
                 {msg.sender === 'user' && (
@@ -355,6 +489,30 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({ daysPerWeek, unit })
                     </div>
                   </div>
                 ))}
+              </div>
+
+              <div className="pt-2 border-t border-stone-100">
+                {isGeneratedSplitSaved ? (
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-lime-50 border border-lime-200 text-lime-800 rounded-2xl px-5 py-4 text-xs font-medium">
+                    <span className="flex items-center gap-2">
+                      <Check className="w-4 h-4 shrink-0" />
+                      Saved to your custom splits.
+                    </span>
+                    <button
+                      onClick={onViewSavedSplit}
+                      className="px-4 py-2 rounded-full bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold uppercase tracking-wider transition-colors shrink-0"
+                    >
+                      View in Frequency Split
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleSaveGeneratedSplit}
+                    className="w-full py-3.5 bg-stone-900 hover:bg-stone-800 text-white font-medium text-xs tracking-wider uppercase rounded-full shadow-xs transition-all"
+                  >
+                    Save as My Custom Split
+                  </button>
+                )}
               </div>
             </div>
           )}

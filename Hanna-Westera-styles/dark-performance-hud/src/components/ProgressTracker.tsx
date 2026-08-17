@@ -96,7 +96,7 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ logs, unit, on
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Award className="w-5 h-5 text-lime-400" />
-            <h2 className="text-2xl font-light text-stone-950 tracking-tight">Glute Strength Records</h2>
+            <h2 className="text-2xl font-light text-stone-950 tracking-tight">Personal Records</h2>
             <InfoBall
               title="Progressive Overload PRs"
               content="Tracked from completed working sets. Increases in weight or reps at constant RPE reflect myofibrillar hypertrophy and progressive mechanical tension."

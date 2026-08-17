@@ -52,6 +52,19 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
       return;
     }
 
+    const missingFields: string[] = [];
+    if (bodyGroup === '-') missingFields.push('Body Group');
+    if (equipment === '-') missingFields.push('Equipment');
+    if (targetRegion === '-') missingFields.push('Primary Target Region');
+    if (category === '-') missingFields.push('Category Focus');
+    if (biomechanicsType === '-') missingFields.push('Biomechanics Profile');
+    if (difficulty === '-') missingFields.push('Difficulty');
+
+    if (missingFields.length > 0) {
+      setError(`Please select: ${missingFields.join(', ')}.`);
+      return;
+    }
+
     const newExercise: Exercise = {
       id: existingExercise?.id || `custom-${Date.now()}-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
       name: name.trim(),

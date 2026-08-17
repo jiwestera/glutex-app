@@ -640,7 +640,14 @@ export default function App() {
 
         {activeTab === 'progress' && <ProgressTracker logs={workoutLogs} unit={unit} onDeleteLog={handleDeleteLog} />}
 
-        {activeTab === 'ai-coach' && <AICoachPanel daysPerWeek={daysPerWeek} unit={unit} />}
+        {activeTab === 'ai-coach' && (
+          <AICoachPanel
+            daysPerWeek={daysPerWeek}
+            unit={unit}
+            onSaveGeneratedSplit={handleSaveCustomSplit}
+            onViewSavedSplit={() => setActiveTab('frequency')}
+          />
+        )}
       </main>
 
       {/* Footer with Trademark */}

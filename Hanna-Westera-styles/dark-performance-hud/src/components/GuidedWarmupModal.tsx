@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Play, Pause, SkipForward, SkipBack, RotateCcw, CheckCircle2, Shield, Sparkles, Volume2, VolumeX } from 'lucide-react';
 import { MobilityRoutine, MobilityStep } from '../types';
 
@@ -23,10 +23,17 @@ export const GuidedWarmupModal: React.FC<GuidedWarmupModalProps> = ({ routine, o
   const currentStep = routine.steps[activeStepIndex];
   const [stepTimerSeconds, setStepTimerSeconds] = useState<number>(() => getSecondsFromStep(currentStep));
 
+  // Countdown deadline as a wall-clock timestamp, not a tick counter — keeps the
+  // displayed time accurate even if setInterval gets throttled (e.g. screen locks
+  // mid-warmup), the same fix applied to the active workout's timers.
+  const endTimeRef = useRef<number>(Date.now() + getSecondsFromStep(currentStep) * 1000);
+
   // Reset timer when step index changes
   useEffect(() => {
     if (currentStep) {
-      setStepTimerSeconds(getSecondsFromStep(currentStep));
+      const seconds = getSecondsFromStep(currentStep);
+      endTimeRef.current = Date.now() + seconds * 1000;
+      setStepTimerSeconds(seconds);
       setIsTimerRunning(true);
     }
   }, [activeStepIndex, routine]);
@@ -53,24 +60,33 @@ export const GuidedWarmupModal: React.FC<GuidedWarmupModalProps> = ({ routine, o
     }
   };
 
-  // Timer interval countdown
+  // Timer interval countdown — recomputed from the wall-clock deadline on every
+  // tick and on tab-visibility change, so it self-corrects instead of drifting.
   useEffect(() => {
-    let interval: any = null;
-    if (isTimerRunning && stepTimerSeconds > 0 && !isCompleted) {
-      interval = setInterval(() => {
-        setStepTimerSeconds((prev) => prev - 1);
-      }, 1000);
-    } else if (stepTimerSeconds === 0 && isTimerRunning && !isCompleted) {
-      playChime();
-      if (activeStepIndex < routine.steps.length - 1) {
-        setActiveStepIndex((prev) => prev + 1);
-      } else {
-        setIsTimerRunning(false);
-        setIsCompleted(true);
+    if (!isTimerRunning || isCompleted) return;
+
+    const tick = () => {
+      const remaining = Math.max(0, Math.round((endTimeRef.current - Date.now()) / 1000));
+      setStepTimerSeconds(remaining);
+      if (remaining === 0) {
+        playChime();
+        if (activeStepIndex < routine.steps.length - 1) {
+          setActiveStepIndex((prev) => prev + 1);
+        } else {
+          setIsTimerRunning(false);
+          setIsCompleted(true);
+        }
       }
-    }
-    return () => clearInterval(interval);
-  }, [isTimerRunning, stepTimerSeconds, activeStepIndex, routine, isCompleted, soundEnabled]);
+    };
+
+    tick();
+    const interval = setInterval(tick, 1000);
+    document.addEventListener('visibilitychange', tick);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', tick);
+    };
+  }, [isTimerRunning, isCompleted, activeStepIndex, routine, soundEnabled]);
 
   const handleNextStep = () => {
     if (activeStepIndex < routine.steps.length - 1) {
@@ -88,8 +104,21 @@ export const GuidedWarmupModal: React.FC<GuidedWarmupModalProps> = ({ routine, o
   };
 
   const handleResetStep = () => {
-    setStepTimerSeconds(getSecondsFromStep(currentStep));
+    const seconds = getSecondsFromStep(currentStep);
+    endTimeRef.current = Date.now() + seconds * 1000;
+    setStepTimerSeconds(seconds);
     setIsTimerRunning(true);
+  };
+
+  const toggleTimer = () => {
+    setIsTimerRunning((prev) => {
+      const next = !prev;
+      if (next) {
+        // Resuming from pause: re-anchor the deadline from whatever time was left.
+        endTimeRef.current = Date.now() + stepTimerSeconds * 1000;
+      }
+      return next;
+    });
   };
 
   return (
@@ -248,7 +277,7 @@ export const GuidedWarmupModal: React.FC<GuidedWarmupModalProps> = ({ routine, o
                 </button>
 
                 <button
-                  onClick={() => setIsTimerRunning(!isTimerRunning)}
+                  onClick={toggleTimer}
                   className="p-4 bg-white text-stone-950 font-bold rounded-full shadow-md hover:bg-stone-100 transition-colors cursor-pointer"
                   title={isTimerRunning ? 'Pause Timer' : 'Resume Timer'}
                 >
