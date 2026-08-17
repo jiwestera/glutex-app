@@ -222,36 +222,79 @@ export default function App() {
     });
   };
 
+  // Local data worth protecting with a confirmation before a cloud pull would
+  // silently discard it (e.g. workouts logged before ever signing in).
+  const hasMeaningfulLocalData = () =>
+    syncedStateRef.current.workoutLogs.length > 0 ||
+    Object.keys(syncedStateRef.current.customSplits).length > 0 ||
+    syncedStateRef.current.userCreatedSplits.length > 0 ||
+    syncedStateRef.current.customWarmups.length > 0 ||
+    getLocalOnlySyncFields().customExercises.length > 0;
+
+  const [pendingCloudOverwrite, setPendingCloudOverwrite] = useState<{ uid: string; data: SyncedData } | null>(null);
+
+  // Bumped on every auth transition so an in-flight pull/push from a
+  // superseded sign-in (e.g. user signs out of A and into B before A's async
+  // work finishes) can detect it's stale and bail out instead of applying its
+  // result on top of a newer account's session.
+  const authGenerationRef = useRef(0);
+
+  // Pulls cloud data (or pushes local data up as the first sync) then flips
+  // hasHydratedFromCloud once that's genuinely settled. Used both on sign-in
+  // and to retry from an error state -- it never blindly pushes without first
+  // confirming there's nothing on the cloud it would be stomping.
+  const hydrateOrPushInitial = async (uid: string, generation: number) => {
+    setSyncStatus('syncing');
+    try {
+      const cloudData = await pullSyncedData(uid);
+      if (authGenerationRef.current !== generation) return; // superseded by a newer sign-in/out
+      if (cloudData) {
+        if (hasMeaningfulLocalData()) {
+          // Don't silently discard local-only work -- let the user choose.
+          setPendingCloudOverwrite({ uid, data: cloudData });
+          setSyncStatus('idle');
+          return;
+        }
+        applyCloudData(cloudData);
+      } else {
+        await pushSyncedData(uid, buildSyncPayload());
+        if (authGenerationRef.current !== generation) return;
+      }
+      hasHydratedFromCloud.current = true;
+      setSyncStatus('synced');
+    } catch (err) {
+      if (authGenerationRef.current !== generation) return;
+      console.error('Cloud sync failed:', err);
+      setSyncStatus('error');
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = subscribeToAuthState(async (user) => {
+      authGenerationRef.current += 1;
+      const generation = authGenerationRef.current;
       if (!user) {
         setSyncUser(null);
         setSyncStatus('idle');
         hasHydratedFromCloud.current = false;
         return;
       }
-
       setSyncUser(user);
-      setSyncStatus('syncing');
-      try {
-        const cloudData = await pullSyncedData(user.uid);
-        if (cloudData) {
-          // Returning account (or a second device) -- the cloud copy wins.
-          applyCloudData(cloudData);
-        } else {
-          // First time this account has synced: push whatever's local up.
-          await pushSyncedData(user.uid, buildSyncPayload());
-        }
-        hasHydratedFromCloud.current = true;
-        setSyncStatus('synced');
-      } catch (err) {
-        console.error('Cloud sync failed:', err);
-        setSyncStatus('error');
-      }
+      await hydrateOrPushInitial(user.uid, generation);
     });
     return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const pushNow = (uid: string) => {
+    setSyncStatus('syncing');
+    return pushSyncedData(uid, buildSyncPayload())
+      .then(() => setSyncStatus('synced'))
+      .catch((err) => {
+        console.error('Cloud sync push failed:', err);
+        setSyncStatus('error');
+      });
+  };
 
   // Auto-push on change, debounced so a burst of edits (e.g. logging several
   // sets in a row) doesn't fire a write per keystroke. Skipped until the
@@ -259,28 +302,48 @@ export default function App() {
   // just-pulled cloud copy with stale local data.
   useEffect(() => {
     if (!syncUser || !hasHydratedFromCloud.current) return;
-    setSyncStatus('syncing');
-    const timeout = setTimeout(() => {
-      pushSyncedData(syncUser.uid, buildSyncPayload())
-        .then(() => setSyncStatus('synced'))
-        .catch((err) => {
-          console.error('Cloud sync push failed:', err);
-          setSyncStatus('error');
-        });
-    }, 1500);
+    const timeout = setTimeout(() => pushNow(syncUser.uid), 1500);
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workoutLogs, customSplits, userCreatedSplits, customWarmups, syncUser]);
 
+  // Safety-net push: custom exercises, hidden-exercise choices, and per-exercise
+  // weight/rep memory live only in localStorage, not the React state watched
+  // above, so edits to those alone would otherwise never trigger a sync. This
+  // periodic push is a simple backstop rather than wiring change notifications
+  // through every localStorage writer.
+  useEffect(() => {
+    if (!syncUser) return;
+    const interval = setInterval(() => {
+      if (hasHydratedFromCloud.current) pushNow(syncUser.uid);
+    }, 60000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [syncUser]);
+
   const handleManualSync = () => {
     if (!syncUser) return;
-    setSyncStatus('syncing');
-    pushSyncedData(syncUser.uid, buildSyncPayload())
-      .then(() => setSyncStatus('synced'))
-      .catch((err) => {
-        console.error('Manual sync failed:', err);
-        setSyncStatus('error');
-      });
+    if (!hasHydratedFromCloud.current) {
+      // Never successfully hydrated (first sync attempt failed, etc) -- retry
+      // the pull-first flow instead of pushing potentially-incomplete local
+      // data over whatever's already on the cloud.
+      hydrateOrPushInitial(syncUser.uid, authGenerationRef.current);
+      return;
+    }
+    pushNow(syncUser.uid);
+  };
+
+  const resolvePendingCloudOverwrite = (choice: 'useCloud' | 'keepLocal') => {
+    if (!pendingCloudOverwrite) return;
+    const { uid, data } = pendingCloudOverwrite;
+    if (choice === 'useCloud') {
+      applyCloudData(data);
+    }
+    // 'keepLocal' -- leave local state as-is; the next auto-push will upload
+    // it, making this device's data the new cloud copy going forward.
+    hasHydratedFromCloud.current = true;
+    setSyncStatus('synced');
+    setPendingCloudOverwrite(null);
   };
 
   const allMobilityRoutines = [...mobilityRoutines, ...customWarmups];
@@ -291,10 +354,17 @@ export default function App() {
     allAvailableSplits.find((s) => s.daysPerWeek === daysPerWeek) ||
     prebuiltSplits[1];
 
+  // A customSplits[daysPerWeek] entry is a local-edit overlay scoped to whichever
+  // split was active when the edit was made (it's a clone that keeps that split's
+  // id). If the user has since selected a *different* split for this day count
+  // (e.g. saved a new AI-generated split), that stale overlay must not mask it.
   const rawCustomSplit = customSplits[daysPerWeek];
-  const isCustomized = !!rawCustomSplit;
+  const isCustomSplitStillValid = !!rawCustomSplit && rawCustomSplit.id === activeSplitBase.id;
+  const isCustomized = isCustomSplitStillValid;
 
-  let activeSplit: WorkoutSplit = rawCustomSplit || transformSplitForLocation(activeSplitBase, locationPreset);
+  let activeSplit: WorkoutSplit = isCustomSplitStillValid
+    ? rawCustomSplit
+    : transformSplitForLocation(activeSplitBase, locationPreset);
 
   const baseDaysCount = activeSplitBase.daysPerWeek;
   const totalDaysCount = activeSplit.days.length;
@@ -777,6 +847,38 @@ export default function App() {
           onFinishWorkout={handleFinishWorkout}
           onCancelWorkout={() => setActiveWorkoutDayNumber(null)}
         />
+      )}
+
+      {/* Cloud data found on sign-in while this device already has local data --
+          let the user pick a side instead of silently discarding either. */}
+      {pendingCloudOverwrite && (
+        <div className="fixed inset-0 bg-stone-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white hud-modal-solid border border-stone-200 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-6 text-left hud-corners">
+            <div className="space-y-1.5">
+              <h3 className="text-xl font-medium text-stone-950">This account already has cloud data</h3>
+              <p className="text-xs text-stone-600 leading-relaxed">
+                This device also has workout data that hasn't been synced yet. Choose which one to keep —
+                the other will be replaced.
+              </p>
+            </div>
+            <div className="flex flex-col space-y-2.5">
+              <button
+                type="button"
+                onClick={() => resolvePendingCloudOverwrite('useCloud')}
+                className="w-full py-3 rounded-full bg-stone-900 hover:bg-stone-800 text-white font-semibold text-xs uppercase tracking-wider transition-colors cursor-pointer"
+              >
+                Use Cloud Data (replace this device's data)
+              </button>
+              <button
+                type="button"
+                onClick={() => resolvePendingCloudOverwrite('keepLocal')}
+                className="w-full py-3 rounded-full border border-stone-200 bg-stone-50 hover:bg-stone-100 text-stone-700 font-semibold text-xs uppercase tracking-wider transition-colors cursor-pointer"
+              >
+                Keep This Device's Data (replace the cloud copy)
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

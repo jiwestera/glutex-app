@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkBreaks from 'remark-breaks';
 import { Sparkles, Send, Bot, User, RefreshCw, Wand2, Check, Dumbbell } from 'lucide-react';
-import { UnitSystem, WorkoutSplit, WorkoutDay, PlannedExercise, Exercise } from '../types';
+import { UnitSystem, WorkoutSplit, WorkoutDay, PlannedExercise, Exercise, BodyGroup } from '../types';
 import { HudSelect } from './HudSelect';
 import { API_BASE_URL } from '../utils/apiBase';
 import { getAllExercises, saveCustomExercise } from '../utils/exerciseUtils';
@@ -26,6 +27,12 @@ const aiMessageMarkdownComponents = {
   )
 };
 
+// Monotonic counter appended to generated exercise ids -- Date.now() alone only
+// has 1ms resolution, which a synchronous loop over several exercises can
+// easily complete within, risking two different exercises colliding on the
+// same id.
+let aiCustomExerciseIdCounter = 0;
+
 // Resolves an AI-suggested exercise name to a real library exercise ID where
 // possible; otherwise creates and persists a lightweight custom exercise so the
 // generated split can still be saved as a normal, fully usable routine.
@@ -39,10 +46,23 @@ const resolveOrCreateExerciseId = (
   const exactMatch = library.find((e) => e.name.toLowerCase() === nameLower);
   if (exactMatch) return exactMatch.id;
 
-  const partialMatch = library.find(
+  // Substring matching on name alone is ambiguous for generic AI-suggested
+  // names ("Squat", "RDL", "Row" all match multiple unrelated library variants)
+  // and picking the first array match risks silently binding the wrong
+  // exercise. Narrow to same-targetRegion candidates first when the AI gave us
+  // one -- only fall back to matching across the whole library if that yields
+  // nothing, and even then prefer the shortest (least presumptive) name match.
+  const targetRegionLower = (aiExercise.targetRegion || '').trim().toLowerCase();
+  const substringCandidates = library.filter(
     (e) => nameLower.length > 3 && (e.name.toLowerCase().includes(nameLower) || nameLower.includes(e.name.toLowerCase()))
   );
-  if (partialMatch) return partialMatch.id;
+  const regionScopedMatch = targetRegionLower
+    ? substringCandidates.find((e) => e.targetRegion.toLowerCase() === targetRegionLower)
+    : undefined;
+  const bestSubstringMatch =
+    regionScopedMatch ||
+    substringCandidates.slice().sort((a, b) => a.name.length - b.name.length)[0];
+  if (bestSubstringMatch) return bestSubstringMatch.id;
 
   const guessedEquipment: Exercise['equipment'] = equipmentLabel.includes('Bodyweight')
     ? 'Bodyweight'
@@ -56,20 +76,42 @@ const resolveOrCreateExerciseId = (
     ? 'Advanced'
     : 'Intermediate';
 
+  const regionLower = (aiExercise.targetRegion || '').toLowerCase();
+  const guessedBodyGroup: BodyGroup = regionLower.includes('glute')
+    ? 'Glutes'
+    : regionLower.includes('quad') || regionLower.includes('hamstring') || regionLower.includes('leg') || regionLower.includes('calv')
+    ? 'Legs'
+    : regionLower.includes('chest')
+    ? 'Chest'
+    : regionLower.includes('back')
+    ? 'Back'
+    : regionLower.includes('shoulder') || regionLower.includes('arm')
+    ? 'Arms'
+    : regionLower.includes('core') || regionLower.includes('ab')
+    ? 'Core'
+    : regionLower.includes('full body')
+    ? 'Full Body'
+    : 'Glutes';
+
   // Some places in the app fall back to displaying exerciseId.replace(/-/g, ' ')
   // when a lookup isn't convenient (e.g. split-day preview cards) — keep this
   // slug name-first and short so that fallback still reads as a real exercise
-  // name instead of a raw timestamp.
+  // name instead of a raw timestamp. The counter suffix (not just Date.now(),
+  // which only has 1ms resolution) guarantees uniqueness even when several
+  // exercises in the same generated split resolve to the same slug within the
+  // same synchronous loop.
   const nameSlug = (aiExercise.name || 'ai-exercise')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
+  aiCustomExerciseIdCounter += 1;
 
   const newExercise: Exercise = {
-    id: `custom-ai-${nameSlug}-${Date.now().toString(36)}`,
+    id: `custom-ai-${nameSlug}-${Date.now().toString(36)}-${aiCustomExerciseIdCounter.toString(36)}`,
     name: aiExercise.name || 'AI Suggested Exercise',
     category: 'Compound Heavy',
     targetRegion: aiExercise.targetRegion || 'Gluteus Maximus',
+    bodyGroup: guessedBodyGroup,
     equipment: guessedEquipment,
     description: 'AI-generated custom exercise from your tailored routine.',
     setupInstructions: ['Set up comfortably with proper form.'],
@@ -324,7 +366,7 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({ daysPerWeek, unit, o
                   }`}
                 >
                   {msg.sender === 'ai' ? (
-                    <ReactMarkdown components={aiMessageMarkdownComponents}>{msg.text}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkBreaks]} components={aiMessageMarkdownComponents}>{msg.text}</ReactMarkdown>
                   ) : (
                     msg.text
                   )}

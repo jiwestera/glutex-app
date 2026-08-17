@@ -155,17 +155,33 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
 
   // Android's system back gesture/button bypasses all in-page UI and would
   // otherwise close the app outright. Registering a listener here hands control
-  // to us instead of the OS default: show the exit-confirmation (or, if it's
-  // already open, treat a second back press as Cancel) rather than exiting.
-  // No-ops harmlessly on web, where this plugin has no native back gesture to hook.
+  // to us instead of the OS default. Back should close whatever's on top first
+  // (summary screen, a sub-modal) rather than always jumping straight to the
+  // destructive exit-confirmation -- otherwise pressing back on the "session
+  // finished, about to save" screen stacks a "discard everything" prompt over
+  // it, and a user who taps through it loses a completed, unsaved workout.
   useEffect(() => {
     const listenerPromise = CapacitorApp.addListener('backButton', () => {
-      setShowExitConfirm((prev) => !prev);
+      if (showExitConfirm) {
+        setShowExitConfirm(false);
+      } else if (showSummary) {
+        setShowSummary(false);
+      } else if (setToRemove) {
+        setSetToRemove(null);
+      } else if (exerciseToRemove) {
+        setExerciseToRemove(null);
+      } else if (isAddingLiveExercise) {
+        setIsAddingLiveExercise(false);
+      } else if (swappingExerciseIndex !== null) {
+        setSwappingExerciseIndex(null);
+      } else {
+        setShowExitConfirm(true);
+      }
     });
     return () => {
       listenerPromise.then((handle) => handle.remove());
     };
-  }, []);
+  }, [showExitConfirm, showSummary, setToRemove, exerciseToRemove, isAddingLiveExercise, swappingExerciseIndex]);
 
   const startRestTimer = (seconds: number) => {
     restEndTimeRef.current = Date.now() + seconds * 1000;
