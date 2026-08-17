@@ -6,7 +6,13 @@ import { ActiveWorkoutModal } from './components/ActiveWorkoutModal';
 import { MobilityHub } from './components/MobilityHub';
 import { ExerciseLibrary } from './components/ExerciseLibrary';
 import { ProgressTracker } from './components/ProgressTracker';
-import { AICoachPanel } from './components/AICoachPanel';
+
+// Lazy-loaded: pulls in react-markdown + remark-breaks, which most sessions
+// never need if the user doesn't visit this tab. Keeping it out of the main
+// bundle shrinks the JS the app has to parse before first paint.
+const AICoachPanel = React.lazy(() =>
+  import('./components/AICoachPanel').then((m) => ({ default: m.AICoachPanel }))
+);
 
 import { prebuiltSplits } from './data/prebuiltSplits';
 import { mobilityRoutines } from './data/mobilityData';
@@ -821,12 +827,20 @@ export default function App() {
         {activeTab === 'progress' && <ProgressTracker logs={workoutLogs} unit={unit} onDeleteLog={handleDeleteLog} />}
 
         {activeTab === 'ai-coach' && (
-          <AICoachPanel
-            daysPerWeek={daysPerWeek}
-            unit={unit}
-            onSaveGeneratedSplit={handleSaveCustomSplit}
-            onViewSavedSplit={() => setActiveTab('frequency')}
-          />
+          <React.Suspense
+            fallback={
+              <div className="flex items-center justify-center py-24 text-stone-400 text-xs uppercase tracking-widest">
+                Loading AI Coach...
+              </div>
+            }
+          >
+            <AICoachPanel
+              daysPerWeek={daysPerWeek}
+              unit={unit}
+              onSaveGeneratedSplit={handleSaveCustomSplit}
+              onViewSavedSplit={() => setActiveTab('frequency')}
+            />
+          </React.Suspense>
         )}
       </main>
 
