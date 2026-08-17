@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { App as CapacitorApp } from '@capacitor/app';
+import { useAndroidBackButton } from '../utils/useAndroidBackButton';
 import {
   Dumbbell,
   Flame,
@@ -97,24 +97,17 @@ export const Header: React.FC<HeaderProps> = ({
   const extraDays = actualDays - daysPerWeek;
 
   // Android back button should close whichever of these is open, instead of
-  // the OS default. Header is always mounted, and registering a Capacitor
-  // backButton listener hands JS full control of back-button behavior with
-  // no built-in fallback -- so this only subscribes while a modal here is
-  // actually open, leaving the OS default (or another screen's own listener,
-  // e.g. the active workout modal's) in effect the rest of the time.
-  useEffect(() => {
-    if (!isClearModalOpen && !isOptionsOpen) return;
-    const listenerPromise = CapacitorApp.addListener('backButton', () => {
-      if (isClearModalOpen) {
-        setIsClearModalOpen(false);
-      } else if (isOptionsOpen) {
-        setIsOptionsOpen(false);
-      }
-    });
-    return () => {
-      listenerPromise.then((handle) => handle.remove());
-    };
-  }, [isClearModalOpen, isOptionsOpen]);
+  // the OS default. Header is always mounted, so this only subscribes while
+  // a modal here is actually open, leaving the OS default (or another
+  // screen's own listener, e.g. the active workout modal's) in effect the
+  // rest of the time.
+  useAndroidBackButton(() => {
+    if (isClearModalOpen) {
+      setIsClearModalOpen(false);
+    } else if (isOptionsOpen) {
+      setIsOptionsOpen(false);
+    }
+  }, isClearModalOpen || isOptionsOpen);
 
   // Toggle quick dark mode
   const handleQuickDarkModeToggle = () => {
@@ -447,8 +440,8 @@ export const Header: React.FC<HeaderProps> = ({
                 {[
                   { id: 'all', label: 'All Equipment', desc: 'Full commercial gym & specialty machines' },
                   { id: 'commercial', label: 'Commercial Gym', desc: 'Standard barbell, cable & machines' },
-                  { id: 'home_cable', label: 'Home Gym (Cable)', desc: 'Rack, barbell, dumbbells & cables' },
-                  { id: 'home_dumbbells', label: 'Dumbbells & Bands', desc: 'Minimal home equipment setup' }
+                  { id: 'cable', label: 'Home Gym (Cable)', desc: 'Rack, barbell, dumbbells & cables' },
+                  { id: 'home', label: 'Dumbbells & Bands', desc: 'Minimal home equipment setup' }
                 ].map((item) => (
                   <button
                     key={item.id}

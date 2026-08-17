@@ -30,19 +30,21 @@ import {
   SyncedData
 } from './utils/firebaseSync';
 import { SyncStatus } from './components/SyncPanel';
-import { loadJSON } from './utils/storage';
+import { loadJSON, saveJSON, loadString, saveString } from './utils/storage';
+import { useAndroidBackButton } from './utils/useAndroidBackButton';
+import { getRestSoundSettings, saveRestSoundSettings } from './utils/restSound';
 
 export default function App() {
   // Dark Mode preference: 'auto' | 'dark' | 'light'
   const [darkModePreference, setDarkModePreference] = useState<DarkModePreference>(() => {
-    const saved = localStorage.getItem('glute_app_dark_mode_pref');
+    const saved = loadString('glute_app_dark_mode_pref', 'auto');
     if (saved === 'dark' || saved === 'light' || saved === 'auto') return saved as DarkModePreference;
     return 'auto';
   });
 
   // Derived actual isDarkMode boolean
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    const saved = localStorage.getItem('glute_app_dark_mode_pref');
+    const saved = loadString('glute_app_dark_mode_pref', 'auto');
     if (saved === 'dark') return true;
     if (saved === 'light') return false;
     return typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -50,7 +52,7 @@ export default function App() {
 
   // Sync dark mode preference & device prefers-color-scheme
   useEffect(() => {
-    localStorage.setItem('glute_app_dark_mode_pref', darkModePreference);
+    saveString('glute_app_dark_mode_pref', darkModePreference);
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -92,34 +94,34 @@ export default function App() {
 
   // Days per week selection (2, 3, 4, 5, or 6)
   const [daysPerWeek, setDaysPerWeek] = useState<number>(() => {
-    const saved = localStorage.getItem('glute_app_days');
+    const saved = loadString('glute_app_days', '');
     return saved ? parseInt(saved) : 3;
   });
 
   // Location / Equipment Preset filter state
   const [locationPreset, setLocationPreset] = useState<LocationPreset>(() => {
-    return (localStorage.getItem('glutex_location_preset') as LocationPreset) || 'all';
+    return (loadString('glutex_location_preset', '') as LocationPreset) || 'all';
   });
 
   const handleSelectLocationPreset = (preset: LocationPreset) => {
     setLocationPreset(preset);
-    localStorage.setItem('glutex_location_preset', preset);
+    saveString('glutex_location_preset', preset);
   };
 
   // HUD accent color hue (0-360)
   const [hudAccentHue, setHudAccentHue] = useState<number>(() => {
-    const saved = localStorage.getItem('glutex_hud_accent_hue');
+    const saved = loadString('glutex_hud_accent_hue', '');
     return saved ? parseInt(saved) : HUD_DEFAULT_HUE;
   });
 
   useEffect(() => {
-    localStorage.setItem('glutex_hud_accent_hue', hudAccentHue.toString());
+    saveString('glutex_hud_accent_hue', hudAccentHue.toString());
     applyHudAccentHue(hudAccentHue);
   }, [hudAccentHue]);
 
   // Unit system (kg/lbs)
   const [unit, setUnit] = useState<UnitSystem>(() => {
-    const saved = localStorage.getItem('glute_app_unit');
+    const saved = loadString('glute_app_unit', '');
     return (saved as UnitSystem) || 'kg';
   });
 
@@ -143,7 +145,7 @@ export default function App() {
 
   // Active Selected Split ID
   const [activeSplitId, setActiveSplitId] = useState<string>(() => {
-    return localStorage.getItem('glute_app_active_split_id') || `split-${daysPerWeek}`;
+    return loadString('glute_app_active_split_id', '') || `split-${daysPerWeek}`;
   });
 
   // Custom Warmup Routines state
@@ -156,31 +158,31 @@ export default function App() {
 
   // Save preferences
   useEffect(() => {
-    localStorage.setItem('glute_app_days', daysPerWeek.toString());
+    saveString('glute_app_days', daysPerWeek.toString());
   }, [daysPerWeek]);
 
   useEffect(() => {
-    localStorage.setItem('glute_app_unit', unit);
+    saveString('glute_app_unit', unit);
   }, [unit]);
 
   useEffect(() => {
-    localStorage.setItem('glute_app_logs', JSON.stringify(workoutLogs));
+    saveJSON('glute_app_logs', workoutLogs);
   }, [workoutLogs]);
 
   useEffect(() => {
-    localStorage.setItem('glute_app_custom_splits', JSON.stringify(customSplits));
+    saveJSON('glute_app_custom_splits', customSplits);
   }, [customSplits]);
 
   useEffect(() => {
-    localStorage.setItem('glute_app_user_created_splits', JSON.stringify(userCreatedSplits));
+    saveJSON('glute_app_user_created_splits', userCreatedSplits);
   }, [userCreatedSplits]);
 
   useEffect(() => {
-    localStorage.setItem('glute_app_active_split_id', activeSplitId);
+    saveString('glute_app_active_split_id', activeSplitId);
   }, [activeSplitId]);
 
   useEffect(() => {
-    localStorage.setItem('glute_app_custom_warmups', JSON.stringify(customWarmups));
+    saveJSON('glute_app_custom_warmups', customWarmups);
   }, [customWarmups]);
 
   // Optional cross-device cloud sync (Firebase). Entirely inactive unless a
@@ -193,14 +195,15 @@ export default function App() {
   // Mirrors the latest synced state into a ref so the auth-state callback
   // (registered once on mount) can read current values instead of the stale
   // ones captured in its closure at mount time.
-  const syncedStateRef = useRef({ workoutLogs, customSplits, userCreatedSplits, customWarmups });
+  const syncedStateRef = useRef({ workoutLogs, customSplits, userCreatedSplits, customWarmups, activeSplitId });
   useEffect(() => {
-    syncedStateRef.current = { workoutLogs, customSplits, userCreatedSplits, customWarmups };
-  }, [workoutLogs, customSplits, userCreatedSplits, customWarmups]);
+    syncedStateRef.current = { workoutLogs, customSplits, userCreatedSplits, customWarmups, activeSplitId };
+  }, [workoutLogs, customSplits, userCreatedSplits, customWarmups, activeSplitId]);
 
   const buildSyncPayload = (): SyncedData => ({
     ...syncedStateRef.current,
-    ...getLocalOnlySyncFields()
+    ...getLocalOnlySyncFields(),
+    restSoundSettings: getRestSoundSettings()
   });
 
   const applyCloudData = (data: SyncedData) => {
@@ -208,6 +211,8 @@ export default function App() {
     setCustomSplits(data.customSplits || {});
     setUserCreatedSplits(data.userCreatedSplits || []);
     setCustomWarmups(data.customWarmups || []);
+    if (data.activeSplitId) setActiveSplitId(data.activeSplitId);
+    if (data.restSoundSettings) saveRestSoundSettings(data.restSoundSettings);
     applyLocalOnlySyncFields({
       customExercises: data.customExercises || [],
       hiddenExerciseIds: data.hiddenExerciseIds || [],
@@ -216,15 +221,29 @@ export default function App() {
   };
 
   // Local data worth protecting with a confirmation before a cloud pull would
-  // silently discard it (e.g. workouts logged before ever signing in).
-  const hasMeaningfulLocalData = () =>
-    syncedStateRef.current.workoutLogs.length > 0 ||
-    Object.keys(syncedStateRef.current.customSplits).length > 0 ||
-    syncedStateRef.current.userCreatedSplits.length > 0 ||
-    syncedStateRef.current.customWarmups.length > 0 ||
-    getLocalOnlySyncFields().customExercises.length > 0;
+  // silently discard it (e.g. workouts logged before ever signing in, or
+  // hidden-exercise/exercise-memory choices made without logging a full
+  // workout yet -- applyCloudData overwrites both of those too).
+  const hasMeaningfulLocalData = () => {
+    const localOnly = getLocalOnlySyncFields();
+    return (
+      syncedStateRef.current.workoutLogs.length > 0 ||
+      Object.keys(syncedStateRef.current.customSplits).length > 0 ||
+      syncedStateRef.current.userCreatedSplits.length > 0 ||
+      syncedStateRef.current.customWarmups.length > 0 ||
+      localOnly.customExercises.length > 0 ||
+      localOnly.hiddenExerciseIds.length > 0 ||
+      Object.keys(localOnly.exerciseMemory).length > 0
+    );
+  };
 
   const [pendingCloudOverwrite, setPendingCloudOverwrite] = useState<{ uid: string; data: SyncedData } | null>(null);
+
+  // Neither choice here is a safe default to pick on the user's behalf (both
+  // discard one side's data), so back just gets swallowed while this is open
+  // instead of exiting the app -- the user still has to tap Use Cloud/Keep
+  // Local themselves.
+  useAndroidBackButton(() => {}, !!pendingCloudOverwrite);
 
   // Bumped on every auth transition so an in-flight pull/push from a
   // superseded sign-in (e.g. user signs out of A and into B before A's async

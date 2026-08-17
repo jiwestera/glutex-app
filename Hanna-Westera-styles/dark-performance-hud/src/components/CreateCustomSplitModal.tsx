@@ -3,6 +3,7 @@ import { X, Calendar, Plus, Trash2, Sparkles, Check, Dumbbell, Clock } from 'luc
 import { WorkoutSplit, WorkoutDay, PlannedExercise } from '../types';
 import { exercisesData } from '../data/exercisesData';
 import { DEFAULT_WARMUP_MOBILITY_IDS } from '../utils/exerciseUtils';
+import { useAndroidBackButton } from '../utils/useAndroidBackButton';
 import { ConfirmModal } from './ConfirmModal';
 import { HudSelect } from './HudSelect';
 
@@ -56,6 +57,7 @@ export const CreateCustomSplitModal: React.FC<CreateCustomSplitModalProps> = ({
   onSaveSplit,
   onClose
 }) => {
+  useAndroidBackButton(onClose, true);
   const isEditing = !!initialSplit;
 
   const [splitName, setSplitName] = useState<string>(

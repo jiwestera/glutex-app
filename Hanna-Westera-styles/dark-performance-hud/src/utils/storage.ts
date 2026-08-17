@@ -20,3 +20,22 @@ export function saveJSON(key: string, value: unknown): void {
     console.error(`Failed to save "${key}" to storage:`, err);
   }
 }
+
+// For plain (non-JSON) string values -- avoids loadJSON's JSON.parse, which
+// would throw on an unquoted raw string like "dark" or "3".
+export function loadString(key: string, fallback: string): string {
+  try {
+    return localStorage.getItem(key) ?? fallback;
+  } catch (err) {
+    console.error(`Failed to load "${key}" from storage:`, err);
+    return fallback;
+  }
+}
+
+export function saveString(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch (err) {
+    console.error(`Failed to save "${key}" to storage:`, err);
+  }
+}

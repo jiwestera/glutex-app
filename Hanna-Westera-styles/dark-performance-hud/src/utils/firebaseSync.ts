@@ -11,6 +11,7 @@ import {
 import { getFirestore, Firestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import { WorkoutLog, WorkoutSplit, MobilityRoutine } from '../types';
 import { LocalOnlySyncFields } from './exerciseUtils';
+import { RestSoundSettings } from './restSound';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -95,6 +96,8 @@ export interface SyncedData extends LocalOnlySyncFields {
   customSplits: Record<number, WorkoutSplit>;
   userCreatedSplits: WorkoutSplit[];
   customWarmups: MobilityRoutine[];
+  activeSplitId?: string;
+  restSoundSettings?: RestSoundSettings;
   updatedAt?: number;
 }
 

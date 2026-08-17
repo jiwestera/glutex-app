@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { App as CapacitorApp } from '@capacitor/app';
 import { Check, Clock, Plus, Trash2, Award, ArrowLeft, Volume2, VolumeX, Flame, RefreshCw, RotateCcw } from 'lucide-react';
 import { WorkoutDay, LoggedExercise, LoggedSet, WorkoutLog, UnitSystem, PlannedExercise } from '../types';
 import { getAllExercises, getLastLoggedForExercise, saveExerciseMemory } from '../utils/exerciseUtils';
 import { useElapsedTimer, useCountdownTimer } from '../utils/useWallClockTimer';
+import { useAndroidBackButton } from '../utils/useAndroidBackButton';
 import { playRestSound } from '../utils/restSound';
 import { ExerciseSwapModal } from './ExerciseSwapModal';
 import { AddExerciseModal } from './AddExerciseModal';
@@ -117,28 +117,23 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
   // destructive exit-confirmation -- otherwise pressing back on the "session
   // finished, about to save" screen stacks a "discard everything" prompt over
   // it, and a user who taps through it loses a completed, unsaved workout.
-  useEffect(() => {
-    const listenerPromise = CapacitorApp.addListener('backButton', () => {
-      if (showExitConfirm) {
-        setShowExitConfirm(false);
-      } else if (showSummary) {
-        setShowSummary(false);
-      } else if (setToRemove) {
-        setSetToRemove(null);
-      } else if (exerciseToRemove) {
-        setExerciseToRemove(null);
-      } else if (isAddingLiveExercise) {
-        setIsAddingLiveExercise(false);
-      } else if (swappingExerciseIndex !== null) {
-        setSwappingExerciseIndex(null);
-      } else {
-        setShowExitConfirm(true);
-      }
-    });
-    return () => {
-      listenerPromise.then((handle) => handle.remove());
-    };
-  }, [showExitConfirm, showSummary, setToRemove, exerciseToRemove, isAddingLiveExercise, swappingExerciseIndex]);
+  // Deferred while AddExerciseModal/ExerciseSwapModal are open on top -- those
+  // now register their own listener, so registering one here too would double
+  // -fire on a single back press (and, if one of THEM has its own sub-modal
+  // open, incorrectly skip past it).
+  useAndroidBackButton(() => {
+    if (showExitConfirm) {
+      setShowExitConfirm(false);
+    } else if (showSummary) {
+      setShowSummary(false);
+    } else if (setToRemove) {
+      setSetToRemove(null);
+    } else if (exerciseToRemove) {
+      setExerciseToRemove(null);
+    } else {
+      setShowExitConfirm(true);
+    }
+  }, !isAddingLiveExercise && swappingExerciseIndex === null);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -187,7 +182,11 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
     // If set was just checked complete, trigger rest timer if enabled and target rest > 0
     if (field === 'completed' && value === true && restTimerEnabled) {
       const currentEx = loggedExercises[exIndex];
-      const planned = day.exercises.find((p) => p.exerciseId === currentEx?.exerciseId) || day.exercises[exIndex];
+      // Deliberately no positional fallback here: an exercise added mid-session via
+      // "Add Extra Exercise" has no entry in day.exercises (the original plan), and
+      // falling back to day.exercises[exIndex] would silently bind an unrelated
+      // planned exercise's rest time to it once indices drift after adds/removes.
+      const planned = day.exercises.find((p) => p.exerciseId === currentEx?.exerciseId);
       const restTarget = planned ? planned.restSeconds : 0;
       if (restTarget > 0) {
         restTimer.start(restTarget);
@@ -366,7 +365,9 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
           </div>
         ) : (
           loggedExercises.map((ex, exIdx) => {
-            const planned = day.exercises.find((p) => p.exerciseId === ex.exerciseId) || day.exercises[exIdx];
+            // No positional fallback -- see handleSetChange for why indexing into
+            // day.exercises here would risk showing an unrelated exercise's target data.
+            const planned = day.exercises.find((p) => p.exerciseId === ex.exerciseId);
             const prevPerformance = getPreviousPerformance(ex.exerciseId);
 
             return (
@@ -435,7 +436,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                     <div className="col-span-3">
                       <input
                         type="number"
-                        value={set.weightKg || ''}
+                        value={set.completed ? set.weightKg : set.weightKg || ''}
                         onChange={(e) =>
                           handleSetChange(exIdx, setIdx, 'weightKg', parseFloat(e.target.value) || 0)
                         }
@@ -451,7 +452,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                     <div className="col-span-3">
                       <input
                         type="number"
-                        value={set.reps || ''}
+                        value={set.completed ? set.reps : set.reps || ''}
                         onChange={(e) =>
                           handleSetChange(exIdx, setIdx, 'reps', parseInt(e.target.value) || 0)
                         }

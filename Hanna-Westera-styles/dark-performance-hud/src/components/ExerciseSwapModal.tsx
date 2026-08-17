@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { RefreshCw, Search, Check, Dumbbell, Shield, Info, ArrowRight, X, Sparkles, Eye, EyeOff } from 'lucide-react';
 import { Exercise, EquipmentType, GluteRegion } from '../types';
 import { getAllExercises, saveCustomExercise, getHiddenExerciseIds, hideExercise, unhideExercise } from '../utils/exerciseUtils';
+import { useAndroidBackButton } from '../utils/useAndroidBackButton';
 import { CreateExerciseModal } from './CreateExerciseModal';
 
 interface ExerciseSwapModalProps {
@@ -33,6 +34,10 @@ export const ExerciseSwapModal: React.FC<ExerciseSwapModalProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [previewExercise, setPreviewExercise] = useState<Exercise | null>(null);
   const [isCreatingCustom, setIsCreatingCustom] = useState<boolean>(false);
+
+  // Deferred while CreateExerciseModal is open on top -- that modal owns the
+  // back button itself, so this listener only takes over once it's closed.
+  useAndroidBackButton(onClose, !isCreatingCustom);
 
   const handleToggleHide = (exId: string, e: React.MouseEvent) => {
     e.stopPropagation();

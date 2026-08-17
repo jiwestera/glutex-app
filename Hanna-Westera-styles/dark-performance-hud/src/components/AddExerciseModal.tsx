@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Plus, Search, Dumbbell, Info, Check, X, Layers, Sparkles, Eye, EyeOff } from 'lucide-react';
 import { Exercise, PlannedExercise, BodyGroup } from '../types';
 import { getAllExercises, saveCustomExercise, getHiddenExerciseIds, hideExercise, unhideExercise } from '../utils/exerciseUtils';
+import { useAndroidBackButton } from '../utils/useAndroidBackButton';
 import { CreateExerciseModal } from './CreateExerciseModal';
 
 interface AddExerciseModalProps {
@@ -29,6 +30,10 @@ export const AddExerciseModal: React.FC<AddExerciseModalProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [isCreatingCustom, setIsCreatingCustom] = useState<boolean>(false);
+
+  // Deferred while CreateExerciseModal is open on top -- that modal owns the
+  // back button itself, so this listener only takes over once it's closed.
+  useAndroidBackButton(onClose, !isCreatingCustom);
 
   // Planned Exercise default values
   const [sets, setSets] = useState<number>(3);

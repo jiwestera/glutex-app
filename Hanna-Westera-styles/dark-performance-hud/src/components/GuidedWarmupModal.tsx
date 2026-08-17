@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Play, Pause, SkipForward, SkipBack, RotateCcw, CheckCircle2, Shield, Sparkles, Volume2, VolumeX } from 'lucide-react';
 import { MobilityRoutine, MobilityStep } from '../types';
 import { useCountdownTimer } from '../utils/useWallClockTimer';
+import { useAndroidBackButton } from '../utils/useAndroidBackButton';
 
 interface GuidedWarmupModalProps {
   routine: MobilityRoutine;
@@ -9,6 +10,7 @@ interface GuidedWarmupModalProps {
 }
 
 export const GuidedWarmupModal: React.FC<GuidedWarmupModalProps> = ({ routine, onClose }) => {
+  useAndroidBackButton(onClose, true);
   const [activeStepIndex, setActiveStepIndex] = useState<number>(0);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);

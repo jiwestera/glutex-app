@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, X, Dumbbell, Sparkles, AlertCircle } from 'lucide-react';
 import { Exercise, TargetRegion, BodyGroup, EquipmentType, ExerciseCategory } from '../types';
+import { useAndroidBackButton } from '../utils/useAndroidBackButton';
 import { HudSelect } from './HudSelect';
 
 interface CreateExerciseModalProps {
@@ -16,6 +17,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
   initialBodyGroup,
   existingExercise
 }) => {
+  useAndroidBackButton(onClose, true);
   const isEditing = !!existingExercise;
 
   const [name, setName] = useState(existingExercise?.name || '');
