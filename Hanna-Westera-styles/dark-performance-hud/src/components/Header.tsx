@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { App as CapacitorApp } from '@capacitor/app';
 import {
   Dumbbell,
   Flame,
@@ -95,6 +96,26 @@ export const Header: React.FC<HeaderProps> = ({
   const actualDays = totalDays ?? daysPerWeek;
   const extraDays = actualDays - daysPerWeek;
 
+  // Android back button should close whichever of these is open, instead of
+  // the OS default. Header is always mounted, and registering a Capacitor
+  // backButton listener hands JS full control of back-button behavior with
+  // no built-in fallback -- so this only subscribes while a modal here is
+  // actually open, leaving the OS default (or another screen's own listener,
+  // e.g. the active workout modal's) in effect the rest of the time.
+  useEffect(() => {
+    if (!isClearModalOpen && !isOptionsOpen) return;
+    const listenerPromise = CapacitorApp.addListener('backButton', () => {
+      if (isClearModalOpen) {
+        setIsClearModalOpen(false);
+      } else if (isOptionsOpen) {
+        setIsOptionsOpen(false);
+      }
+    });
+    return () => {
+      listenerPromise.then((handle) => handle.remove());
+    };
+  }, [isClearModalOpen, isOptionsOpen]);
+
   // Toggle quick dark mode
   const handleQuickDarkModeToggle = () => {
     if (isDarkMode) {
@@ -105,6 +126,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
+    <>
     <header className="bg-white/95 backdrop-blur-md border-b border-stone-200/60 text-stone-900 sticky top-0 z-30 shadow-2xs transition-colors">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
@@ -243,8 +265,18 @@ export const Header: React.FC<HeaderProps> = ({
           })}
         </nav>
       </div>
+    </header>
 
-      {/* OPTIONS MENU MODAL */}
+    {/* Both modals below are rendered as siblings of <header>, not descendants --
+        <header> has backdrop-blur (a CSS backdrop-filter), which creates a new
+        containing block for position:fixed descendants per spec. Nested inside
+        it, these modals' "fixed inset-0" backdrops were constrained to the
+        header's own ~120px box instead of the full viewport: the white card
+        still visually overflowed past that box and looked fine, but tapping
+        anywhere below the header hit nothing, so tap-outside-to-close silently
+        never worked except in a thin strip at the very top of the screen. */}
+
+    {/* OPTIONS MENU MODAL */}
       {isOptionsOpen && (
         <div
           onClick={() => setIsOptionsOpen(false)}
@@ -599,6 +631,6 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
       )}
-    </header>
+    </>
   );
 };
